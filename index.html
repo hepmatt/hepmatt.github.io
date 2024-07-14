@@ -81,7 +81,17 @@
                         document.getElementById('Total').value = T;
                     }
             </script>
-        <p>calcualte your total 90 day sortie count lookback</p> 
+        <p>calcualte your total 90 day sortie count lookback</p> <br />
+        <label for="thisMonth">This Months Sortie Total:</label>
+            <input type="text" id="thisMonth" name="This Month" required><br />
+        <label for="lastMonth">Last Months Sortie Total:</label>
+            <input type="text" id="lastMonth" name="last month" required><br />
+        <label for="twoMonths">Total Sorties Flown 2 Months Ago:</label>
+            <input type="text" id="twoMonths" name="2 months ago" required><br />
+
+        <input type="button" value="calculate"
+            oneclick="calcSortieCount();" />
+        <input type="text" id="Total" name="Total" /><br />
         
         <p><em>Links!</em></p>
         <a href="resume.html" target="_blank">Resume</a><br /><br />
