@@ -54,7 +54,7 @@
 <body>
     <div class="container">
         <h1>Visitor Data Card</h1>
-        <form action="send_email.php" method="post">
+        <form id="visitor-form">
             <label for="first-name">First Name:</label>
             <input type="text" id="first-name" name="first-name" required>
 
@@ -101,5 +101,27 @@
             <button type="submit">Submit</button>
         </form>
     </div>
+
+    <script>
+        document.getElementById('visitor-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const data = new FormData(form);
+            const params = {};
+
+            for (const pair of data.entries()) {
+                params[pair[0]] = pair[1];
+            }
+
+            // Store data in localStorage
+            let submissions = JSON.parse(localStorage.getItem('submissions')) || [];
+            submissions.push(params);
+            localStorage.setItem('submissions', JSON.stringify(submissions));
+
+            alert('Form submitted successfully!');
+            form.reset();
+        });
+    </script>
 </body>
 </html>
