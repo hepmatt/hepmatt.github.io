@@ -72,6 +72,7 @@
             </table>
         </div>
             <script>
+            <head>
                 function calcSortieCount()
                     {
                         m1 = parseFloat(document.getElementById('thisMonth').value);
@@ -81,6 +82,8 @@
                         document.getElementById('Total').value = T;
                     }
             </script>
+            </head>
+        <body>
         <p>calcualte your total 90 day sortie count lookback</p> <br />
         <label for="thisMonth">This Months Sortie Total:</label>
             <input type="text" id="thisMonth" name="This Month" required><br />
@@ -92,7 +95,7 @@
         <input type="button" value="calculate"
             oneclick="calcSortieCount();" />
         <input type="text" id="Total" name="Total" /><br />
-        
+        </body>
         <p><em>Links!</em></p>
         <a href="resume.html" target="_blank">Resume</a><br /><br />
         <a href="https://www.nellis.af.mil/About/Fact-Sheets/Display/Article/284156/united-states-air-force-weapons-school/" target="_blank">Advanced Instructor Course</a><br /><br />
