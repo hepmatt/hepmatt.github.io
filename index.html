@@ -71,8 +71,8 @@
                 </tr>
             </table>
         </div>
-            <script>
-            <head>
+         <head>
+        <script>
                 function calcSortieCount()
                     {
                         m1 = parseFloat(document.getElementById('thisMonth').value);
@@ -86,11 +86,11 @@
         <body>
         <p>calcualte your total 90 day sortie count lookback</p> <br />
         <label for="thisMonth">This Months Sortie Total:</label>
-            <input type="text" id="thisMonth" name="This Month" required><br />
+            <input type="text" id="thisMonth" /><br />
         <label for="lastMonth">Last Months Sortie Total:</label>
-            <input type="text" id="lastMonth" name="last month" required><br />
+            <input type="text" id="lastMonth" /><br />
         <label for="twoMonths">Total Sorties Flown 2 Months Ago:</label>
-            <input type="text" id="twoMonths" name="2 months ago" required><br />
+            <input type="text" id="twoMonths" /><br />
 
         <input type="button" value="calculate"
             oneclick="calcSortieCount();" />
