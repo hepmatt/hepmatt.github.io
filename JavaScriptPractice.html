@@ -3,3 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <html>
+        <head>
+        <script>
+                function calcSortieCount()
+                    {
+                        var m1 = parseFloat(document.getElementById('thisMonth').value);
+                        var m2 = parseFloat(document.getElementById('lastMonth').value);
+                        var m3 = parseFloat(document.getElementById('twoMonths').value);
+                        var T = m1 + m2 + m3;
+                        document.getElementById('Total').value = T;
+                    }
+            </script>
+            </head>
+        <body>
+        <h3>calcualte your total 90 day sortie count lookback</h3> <br />
+        <label for="thisMonth">This Months Sortie Total:</label>
+            <input type="text" id="thisMonth" /><br />
+        <label for="lastMonth">Last Months Sortie Total:</label>
+            <input type="text" id="lastMonth" /><br />
+        <label for="twoMonths">Total Sorties Flown 2 Months Ago:</label>
+            <input type="text" id="twoMonths" /><br />
+
+        <input type="button" value="Calculate"
+            onclick="calcSortieCount();" />
+        <input type="text" id="Total" name="Total" /><br />
+        </body>
+        </html> 
