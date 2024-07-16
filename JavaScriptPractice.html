@@ -73,11 +73,17 @@
                         var m3 = parseFloat(document.getElementById('twoMonths').value);
                         var T = m1 + m2 + m3;
                         document.getElementById('Total').value = T;
+                        let result;
+                        if (T > 10) {
+                            result = "You have enough sorties";
+                        } else {
+                            result = "You need more sorties!;
+                        }
                     }
             </script>
             </head>
         <body>
-        <h3>calcualte your total 90 day sortie count lookback</h3> <br />
+        <h3>calculate your total 90 day sortie count lookback</h3> <br />
         <label for="thisMonth">This Months Sortie Total:</label>
             <input type="text" id="thisMonth" /><br />
         <label for="lastMonth">Last Months Sortie Total:</label>
@@ -88,5 +94,6 @@
         <input type="button" value="Calculate"
             onclick="calcSortieCount();" />
         <input type="text" id="Total" name="Total" /><br />
+        <input type="text" id="result" name="result" /><br />
         </body>
         </html> 
