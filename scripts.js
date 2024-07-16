@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function createDeleteButton() {
         const button = document.createElement('button');
         button.textContent = 'Delete';
+        button.classList.add('delete');
         button.style.marginLeft = '10px';
         button.onclick = function() {
             const li = this.parentElement;
@@ -46,4 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addShift = addShift;
     window.addOfficeDay = addOfficeDay;
     window.addMeeting = addMeeting;
+
+    // Handle dynamic date
+    const dateInput = document.getElementById('date-input');
+    dateInput.addEventListener('change', () => {
+        document.querySelector('h1').textContent = `Schedule for ${dateInput.value}`;
+    });
 });
+
