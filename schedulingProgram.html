@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduling Program</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Schedule for [Date]</h1>
+        <div class="schedule-section" id="day-shift">
+            <h2>Day Shift</h2>
+            <ul id="day-shift-list"></ul>
+            <button onclick="addShift('day')">Add Day Shift</button>
+        </div>
+        <div class="schedule-section" id="swing-shift">
+            <h2>Swing Shift</h2>
+            <ul id="swing-shift-list"></ul>
+            <button onclick="addShift('swing')">Add Swing Shift</button>
+        </div>
+        <div class="schedule-section" id="mids-shift">
+            <h2>Mids Shift</h2>
+            <ul id="mids-shift-list"></ul>
+            <button onclick="addShift('mids')">Add Mids Shift</button>
+        </div>
+        <div class="schedule-section" id="office-days">
+            <h2>Office Days</h2>
+            <ul id="office-days-list"></ul>
+            <button onclick="addOfficeDay()">Add Office Day</button>
+        </div>
+        <div class="schedule-section" id="meetings">
+            <h2>Meetings</h2>
+            <ul id="meetings-list"></ul>
+            <button onclick="addMeeting()">Add Meeting</button>
+        </div>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
