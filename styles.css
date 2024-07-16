@@ -39,7 +39,7 @@ ul {
 }
 
 li {
-    background: #fff;
+    background: #FF8A33;
     margin: 5px 0;
     padding: 10px;
     border-radius: 4px;
@@ -48,7 +48,7 @@ li {
 }
 
 button {
-    background: black;
+    background: #FFE933;
     color: #fff;
     border: none;
     padding: 10px;
