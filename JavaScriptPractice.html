@@ -82,20 +82,20 @@
                         document.getElementById('result').value = result;
                     }
                     function setMonthLabels() {
-            const monthNames = ["January", "February", "March", "April", "May", "June",
+                       const monthNames = ["January", "February", "March", "April", "May", "June",
                                 "July", "August", "September", "October", "November", "December"];
 
-            const currentDate = new Date();
-            const thisMonth = monthNames[currentDate.getMonth()];
-            const lastMonth = monthNames[(currentDate.getMonth() - 1 + 12) % 12];
-            const twoMonthsAgo = monthNames[(currentDate.getMonth() - 2 + 12) % 12];
+                       const currentDate = new Date();
+                       const thisMonth = monthNames[currentDate.getMonth()];
+                       const lastMonth = monthNames[(currentDate.getMonth() - 1 + 12) % 12];
+                       const twoMonthsAgo = monthNames[(currentDate.getMonth() - 2 + 12) % 12];
 
-            document.getElementById('thisMonthLabel').textContent = `Sorties Flown in ${thisMonth}:`;
-            document.getElementById('lastMonthLabel').textContent = `Sorties Flown in ${lastMonth}:`;
-            document.getElementById('twoMonthsLabel').textContent = `Sorties Flown in ${twoMonthsAgo}:`;
-        }
+                         document.getElementById('thisMonthLabel').textContent = `Sorties Flown in ${thisMonth}:`;
+                         document.getElementById('lastMonthLabel').textContent = `Sorties Flown in ${lastMonth}:`;
+                         document.getElementById('twoMonthsLabel').textContent = `Sorties Flown in ${twoMonthsAgo}:`;
+                          }
 
-        window.onload = setMonthLabels;
+                                           window.onload = setMonthLabels;
             </script>
             </head>
         <body>
