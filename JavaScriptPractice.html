@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,26 +12,6 @@
             padding: 0;
             background-color: #f4f4f4;
         }
-        nav {
-            background-color: none; 
-            padding: 0;
-            border: 0;
-        }
-        nav a {
-            color: #393e46; /* light black */
-            margin-bottom: -1px;
-            padding:0.5rem 0.5rem;
-            text-decoration: none;
-            border: 2px solid #393e46;
-            border-radius: 4px 4px 0 0;
-            background-color: #eeeeee;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        nav a:hover {
-            background-color: #d3d3d3;
-            color: #000000;
-            }
       .container {
             max-width: 800px;
             margin: 0 auto;
@@ -75,17 +55,10 @@
         .landscape {
             max-height: 200px; 
         }
-   /*     table {
-            width: 100%;
-            table-layout: fixed;
-        }
-        table img {
-            width: 100%;
-            height: auto;
-        } */
+
     </style>
     <html>
-        <head>
+        </head>
         <script>
                 function calcSortieCount()
                     {
@@ -108,16 +81,25 @@
                         }
                         document.getElementById('result').value = result;
                     }
+                    function setMonthLabels() {
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"];
+
+            const currentDate = new Date();
+            const thisMonth = monthNames[currentDate.getMonth()];
+            const lastMonth = monthNames[(currentDate.getMonth() - 1 + 12) % 12];
+            const twoMonthsAgo = monthNames[(currentDate.getMonth() - 2 + 12) % 12];
+
+            document.getElementById('thisMonthLabel').textContent = `Sorties Flown in ${thisMonth}:`;
+            document.getElementById('lastMonthLabel').textContent = `Sorties Flown in ${lastMonth}:`;
+            document.getElementById('twoMonthsLabel').textContent = `Sorties Flown in ${twoMonthsAgo}:`;
+        }
+
+        window.onload = setMonthLabels;
             </script>
             </head>
         <body>
             <div class="container">
-                <nav>
-                <a href="projects.html">Projects</a>
-                <a href="resume.html">Resume</a>
-                <a href="contactPage.html">Contact</a>
-                <a href="index.html">Home</a>
-            </nav>
         <h3>calculate your total 90 day sortie count lookback</h3> <br />
         <label>Experience Level:</label><br />
             <input type="radio" id="experienced" name="experience" value="10" checked>
@@ -125,11 +107,11 @@
             <input type="radio" id="inexperienced" name="experience" value="15">
                 <label for="inexperienced">Inexperienced(Need 15 Sorties)</label><br />
             
-        <label for="thisMonth">This Months Sortie Total:</label>
+        <label id="thisMonthLabel" for="thisMonth"></label>
             <input type="text" id="thisMonth" /><br />
-        <label for="lastMonth">Last Months Sortie Total:</label>
+        <label id="lastMonthLabel" for="lastMonth"></label>
             <input type="text" id="lastMonth" /><br />
-        <label for="twoMonths">Total Sorties Flown 2 Months Ago:</label>
+        <label id="twoMonthsLabel" for="twoMonths"></label>
             <input type="text" id="twoMonths" /><br />
 
         <input type="button" value="Calculate"
@@ -137,10 +119,5 @@
         <input type="text" id="Total" name="Total" readonly/><br />
         <input type="text" id="result" name="result" readonly/><br />
             </div>
-                <footer style="text-align: center;">
-                <p>CSCI434: Web Programming.</p>
-                </footer>
         </body>
         </html> 
-
-
