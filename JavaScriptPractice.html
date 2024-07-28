@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -75,12 +75,16 @@
                         document.getElementById('Total').value = T;
                         
                         var expChange = document.querySelector('input[name="experience"]:checked').value;
-                        expChange = parseInt(expChange, 10);
+                        var expChange = parseInt(expChange, 10);
+
+                        var oneMonth = (experience === "10") ? 4 : 6;
                         
                         let result;
-                        if (T > expChange) {
+                        if (T > expChange || m1 > oneMonth)  {
                             result = "You have enough sorties";
-                        } else {
+                        } 
+                    
+                        else {
                             result = "You need more sorties!";
                         }
                         document.getElementById('result').value = result;
