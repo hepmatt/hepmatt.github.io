@@ -68,14 +68,17 @@
         <script>
                 function calcSortieCount()
                     {
-                        
                         var m1 = parseFloat(document.getElementById('thisMonth').value);
                         var m2 = parseFloat(document.getElementById('lastMonth').value);
                         var m3 = parseFloat(document.getElementById('twoMonths').value);
                         var T = m1 + m2 + m3;
                         document.getElementById('Total').value = T;
+                        
+                        var expChange = document.querySelector('input[name="experience"]:checked').value;
+                        expChange = parseInt(expChange, 10);
+                        
                         let result;
-                        if (T > 10) {
+                        if (T > expChange) {
                             result = "You have enough sorties";
                         } else {
                             result = "You need more sorties!";
