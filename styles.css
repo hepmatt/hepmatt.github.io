@@ -18,7 +18,7 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 .container img {
-    max-width: 50%;
+    max-width: 25%;
     height: auto;
     display: block;
     margin: 0 auto;
