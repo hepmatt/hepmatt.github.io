@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Handle dynamic date
     const dateInput = document.getElementById('date-input');
     dateInput.addEventListener('change', () => {
-        document.querySelector('h1').textContent = `Schedule for ${dateInput.value}`;
+        document.querySelector('h1').textContent = `196ATKS schedule for ${dateInput.value}`;
     });
 });
 
