@@ -93,10 +93,10 @@
                         var expChange = document.querySelector('input[name="experience"]:checked').value;
                         expChange = parseInt(expChange, 10);
 
-                        var oneMonth = (expChange === 10) ? 3 : 5;
+                        var oneMonth = (expChange === 10) ? 4 : 6;
                         
                         let result;
-                        if (T >= expChange || m1 > oneMonth)  {
+                        if (T >= expChange || m1 >= oneMonth)  {
                             result = "You have enough sorties";
                         }  else {
                             result = "You need more sorties!";
