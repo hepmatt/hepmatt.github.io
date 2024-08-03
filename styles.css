@@ -8,8 +8,8 @@ body {
     height: 100vh;
     background-color: #f4f4f4;
 }
-
-.container {
+@media (max-width: 768px) {
+   .container {
     padding-top: 85px;
     width: 80%;
     background: #fff;
@@ -17,6 +17,9 @@ body {
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+}
+
+
 .container img {
     max-width: 25%;
     height: auto;
