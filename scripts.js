@@ -47,6 +47,41 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addShift = addShift;
     window.addOfficeDay = addOfficeDay;
     window.addMeeting = addMeeting;
+    <script>
+    document.getElementById('publish-btn').addEventListener('click', function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Add title and date
+        doc.text('196ATKS Schedule', 10, 10);
+        doc.text('Date: ' + document.getElementById('date-input').value, 10, 20);
+
+        // Add content from different sections
+        const dayShiftList = document.getElementById('day-shift-list').innerText;
+        const swingShiftList = document.getElementById('swing-shift-list').innerText;
+        const midsShiftList = document.getElementById('mids-shift-list').innerText;
+        const officeDaysList = document.getElementById('office-days-list').innerText;
+        const meetingsList = document.getElementById('meetings-list').innerText;
+
+        doc.text('Day Shift:', 10, 30);
+        doc.text(dayShiftList, 10, 40);
+
+        doc.text('Swing Shift:', 10, 50);
+        doc.text(swingShiftList, 10, 60);
+
+        doc.text('Mids Shift:', 10, 70);
+        doc.text(midsShiftList, 10, 80);
+
+        doc.text('Office Days:', 10, 90);
+        doc.text(officeDaysList, 10, 100);
+
+        doc.text('Meetings:', 10, 110);
+        doc.text(meetingsList, 10, 120);
+
+        // Save the PDF
+        doc.save('schedule.pdf');
+    });
+</script>
 
     // Handle dynamic date
     const dateInput = document.getElementById('date-input');
