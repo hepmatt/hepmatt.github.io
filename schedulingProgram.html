@@ -70,56 +70,47 @@
         <button id="publish-btn">Publish as PDF</button>
 
            <script>
-    document.getElementById('publish-btn').addEventListener('click', function() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+   document.getElementById('publish-btn').addEventListener('click', function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Get the selected date
+    const dateInput = document.getElementById('date-input').value;
+    const formattedDate = dateInput ? dateInput.replace(/-/g, '_') : 'schedule';
+    
+    // Add title and date
+    let verticalPosition = 10;
+    doc.text('196ATKS Schedule', 10, verticalPosition);
+    verticalPosition += 10;
+    doc.text('Date: ' + dateInput, 10, verticalPosition);
+    verticalPosition += 10;
+    
+    // Helper function to add text and update vertical position
+    function addSection(title, listId) {
+        doc.text(title, 10, verticalPosition);
+        verticalPosition += 10;
+        const items = document.querySelectorAll(`#${listId} li`);
+        items.forEach((item, index) => {
+            doc.text((index + 1) + '. ' + item.childNodes[0].nodeValue.trim(), 10, verticalPosition);
+            verticalPosition += 10;
+        });
+        verticalPosition += 10; // Add space between sections
+    }
+    
+    // Add content from different sections
+    addSection('Day Shift 1:', 'day1-shift-list');
+    addSection('Day Shift 2:', 'day2-shift-list');
+    addSection('Swing Shift 1:', 'swing1-shift-list');
+    addSection('Swing Shift 2:', 'swing2-shift-list');
+    addSection('Mids Shift 1:', 'mids1-shift-list');
+    addSection('Mids Shift 2:', 'mids2-shift-list');
+    addSection('Office Days:', 'office-days-list');
+    addSection('Meetings:', 'meetings-list');
+    
+    // Save the PDF with the date as part of the filename
+    doc.save(formattedDate + '_schedule.pdf');
+});
 
-        // Get the selected date
-        const dateInput = document.getElementById('date-input').value;
-        const formattedDate = dateInput ? dateInput.replace(/-/g, '_') : 'schedule';
-
-        // Add title and date
-        doc.text('196ATKS Schedule', 10, 10);
-        doc.text('Date: ' + dateInput, 10, 20);
-
-        // Helper function to extract text from list items
-        function getListText(listId) {
-            const items = document.querySelectorAll(`#${listId} li`);
-            let text = '';
-            items.forEach((item, index) => {
-                text += (index + 1) + '. ' + item.childNodes[0].nodeValue.trim() + '\n';
-            });
-            return text;
-        }
-
-        // Add content from different sections
-        doc.text('Day1 Shift:', 10, 30);
-        doc.text(getListText('day1-shift-list'), 10, 40);
-
-        doc.text('Day2 Shift:', 10, 30);
-        doc.text(getListText('day2-shift-list'), 10, 40);
-
-        doc.text('Swing1 Shift:', 10, 60);
-        doc.text(getListText('swing1-shift-list'), 10, 70);
-
-        doc.text('Swing2 Shift:', 10, 60);
-        doc.text(getListText('swing2-shift-list'), 10, 70);
-
-        doc.text('Mids1 Shift:', 10, 90);
-        doc.text(getListText('mids1-shift-list'), 10, 100);
-        
-        doc.text('Mids2 Shift:', 10, 90);
-        doc.text(getListText('mids2-shift-list'), 10, 100);
-
-        doc.text('Office Days:', 10, 120);
-        doc.text(getListText('office-days-list'), 10, 130);
-
-        doc.text('Meetings:', 10, 150);
-        doc.text(getListText('meetings-list'), 10, 160);
-
-        // Save the PDF with the date as part of the filename
-        doc.save(formattedDate + '_schedule.pdf');
-    });
 </script>
 
         <p>Unit 5 form version using Jotform <a href="schedulingForm.html">here</a></p><br />
