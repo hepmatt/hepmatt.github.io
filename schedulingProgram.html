@@ -70,35 +70,61 @@
         <button id="publish-btn">Publish as PDF</button>
 
            <script>
-   document.getElementById('publish-btn').addEventListener('click', function() {
+  document.getElementById('publish-btn').addEventListener('click', function() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
     // Get the selected date
     const dateInput = document.getElementById('date-input').value;
-    const formattedDate = dateInput ? dateInput.replace(/-/g, '_') : 'schedule';
+    const date = new Date(dateInput);
     
+    // Function to format the date
+    function formatDate(date) {
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const dayOfWeek = days[date.getDay()];
+        const month = months[date.getMonth()];
+        const day = date.getDate();
+        const year = date.getFullYear();
+        return `${dayOfWeek}, ${month} ${day}, ${year}`;
+    }
+    
+    const formattedDate = formatDate(date);
+
     // Define page margins and height
     const margin = 10;
     const pageHeight = doc.internal.pageSize.height;
     let verticalPosition = margin;
 
-    // Add title and date
+    // Define colors for each section
+    const colors = {
+        day1: [0, 0, 255], // Blue
+        day2: [0, 128, 0], // Green
+        swing1: [255, 0, 0], // Red
+        swing2: [255, 165, 0], // Orange
+        mids1: [128, 0, 128], // Purple
+        mids2: [0, 255, 255], // Cyan
+        office: [0, 0, 0], // Black
+        meetings: [128, 128, 128] // Gray
+    };
+
+    // Add title and formatted date
     doc.text('196ATKS Schedule', margin, verticalPosition);
     verticalPosition += 10;
-    doc.text('Date: ' + dateInput, margin, verticalPosition);
+    doc.text('Date: ' + formattedDate, margin, verticalPosition);
     verticalPosition += 10;
 
-    // Helper function to add text and check for page breaks
-    function addSection(title, listId) {
+    // Helper function to add text with bullet points, color, and check for page breaks
+    function addSection(title, listId, color) {
         if (verticalPosition + 10 > pageHeight) {
             doc.addPage();
             verticalPosition = margin;
         }
+        doc.setTextColor(...color); // Set text color
         doc.text(title, margin, verticalPosition);
         verticalPosition += 10;
         const items = document.querySelectorAll(`#${listId} li`);
-        items.forEach((item, index) => {
+        items.forEach((item) => {
             if (verticalPosition + 10 > pageHeight) {
                 doc.addPage();
                 verticalPosition = margin;
@@ -109,15 +135,15 @@
         verticalPosition += 10; // Add space between sections
     }
     
-    // Add content from different sections
-    addSection('Day Shift 1:', 'day1-shift-list');
-    addSection('Day Shift 2:', 'day2-shift-list');
-    addSection('Swing Shift 1:', 'swing1-shift-list');
-    addSection('Swing Shift 2:', 'swing2-shift-list');
-    addSection('Mids Shift 1:', 'mids1-shift-list');
-    addSection('Mids Shift 2:', 'mids2-shift-list');
-    addSection('Office Days:', 'office-days-list');
-    addSection('Meetings:', 'meetings-list');
+    // Add content from different sections with colors
+    addSection('Day Shift 1:', 'day1-shift-list', colors.day1);
+    addSection('Day Shift 2:', 'day2-shift-list', colors.day2);
+    addSection('Swing Shift 1:', 'swing1-shift-list', colors.swing1);
+    addSection('Swing Shift 2:', 'swing2-shift-list', colors.swing2);
+    addSection('Mids Shift 1:', 'mids1-shift-list', colors.mids1);
+    addSection('Mids Shift 2:', 'mids2-shift-list', colors.mids2);
+    addSection('Office Days:', 'office-days-list', colors.office);
+    addSection('Meetings:', 'meetings-list', colors.meetings);
     
     // Save the PDF with the date as part of the filename
     doc.save(formattedDate + '_schedule.pdf');
