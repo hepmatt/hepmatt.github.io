@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addShift = addShift;
     window.addOfficeDay = addOfficeDay;
     window.addMeeting = addMeeting;
-    <script>
+
     document.getElementById('publish-btn').addEventListener('click', function() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Save the PDF
         doc.save('schedule.pdf');
     });
-</script>
+
 
     // Handle dynamic date
     const dateInput = document.getElementById('date-input');
