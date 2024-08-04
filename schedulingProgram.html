@@ -82,9 +82,13 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
+        // Get the selected date
+        const dateInput = document.getElementById('date-input').value;
+        const formattedDate = dateInput ? dateInput.replace(/-/g, '_') : 'schedule';
+
         // Add title and date
         doc.text('196ATKS Schedule', 10, 10);
-        doc.text('Date: ' + document.getElementById('date-input').value, 10, 20);
+        doc.text('Date: ' + dateInput, 10, 20);
 
         // Helper function to extract text from list items
         function getListText(listId) {
@@ -112,10 +116,11 @@
         doc.text('Meetings:', 10, 150);
         doc.text(getListText('meetings-list'), 10, 160);
 
-        // Save the PDF
-        doc.save('schedule.pdf');
+        // Save the PDF with the date as part of the filename
+        doc.save(formattedDate + '_schedule.pdf');
     });
 </script>
+
 
         <button id="publish-btn">Publish as PDF</button>
 
