@@ -103,7 +103,7 @@
                 doc.addPage();
                 verticalPosition = margin;
             }
-            doc.text((index + 1) + '. ' + item.childNodes[0].nodeValue.trim(), margin, verticalPosition);
+            doc.text('• ' + item.childNodes[0].nodeValue.trim(), margin, verticalPosition);
             verticalPosition += 10;
         });
         verticalPosition += 10; // Add space between sections
