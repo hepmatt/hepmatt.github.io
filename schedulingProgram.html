@@ -30,23 +30,33 @@
             <button onclick="addShift('day1')">Add D1 Shift</button>
         </div>
         
-        <div class="schedule-section" id="day2-shift">
-            <h2>Day Shift 2:</h2><P> 0600-1500</P>
+       <div class="schedule-section" id="day2-shift">
+            <h2>Day Shift 2: <span style="font-size: 10px;">0600-1500</span></h2>
             <ul id="day2-shift-list"></ul>
             <button onclick="addShift('day2')">Add D2 Shift</button>
         </div>
-        <div class="schedule-section" id="swing-shift">
-            <h2>Swing Shift</h2>
-            <ul id="swing-shift-list"></ul>
-            <button onclick="addShift('swing')">Add Swing Shift</button>
+          <div class="schedule-section" id="swings1-shift">
+            <h2>Swing Shift 1: <span style="font-size: 10px;">1000-1900</span></h2>
+            <ul id="swing1-shift-list"></ul>
+            <button onclick="addShift('swing1')">Add S1 Shift</button>
         </div>
-        <div class="schedule-section" id="mids-shift">
-            <h2>Mids Shift</h2>
-            <ul id="mids-shift-list"></ul>
-            <button onclick="addShift('mids')">Add Mids Shift</button>
+           <div class="schedule-section" id="swings2-shift">
+            <h2>Swing Shift 2: <span style="font-size: 10px;">1400-2300</span></h2>
+            <ul id="swing2-shift-list"></ul>
+            <button onclick="addShift('swing2')">Add S2 Shift</button>
+        </div>
+        <div class="schedule-section" id="mids1-shift">
+            <h2>Mids Shift 1: <span style="font-size: 10px;">1800-0300</span></h2>
+            <ul id="mids1-shift-list"></ul>
+            <button onclick="addShift('mids1')">Add M1 Shift</button>
+        </div>
+        <div class="schedule-section" id="mids2-shift">
+            <h2>Mids Shift 2: <span style="font-size: 10px;">2200-0700</span></h2>
+            <ul id="mids2-shift-list"></ul>
+            <button onclick="addShift('mids2')">Add M2 Shift</button>
         </div>
         <div class="schedule-section" id="office-days">
-            <h2>Office Days</h2>
+            <h2>Office Days: <span style="font-size: 10px;">0730-1630</span></h2>
             <ul id="office-days-list"></ul>
             <button onclick="addOfficeDay()">Add Office Day</button>
         </div>
