@@ -78,20 +78,32 @@
     const dateInput = document.getElementById('date-input').value;
     const formattedDate = dateInput ? dateInput.replace(/-/g, '_') : 'schedule';
     
+    // Define page margins and height
+    const margin = 10;
+    const pageHeight = doc.internal.pageSize.height;
+    let verticalPosition = margin;
+
     // Add title and date
-    let verticalPosition = 10;
-    doc.text('196ATKS Schedule', 10, verticalPosition);
+    doc.text('196ATKS Schedule', margin, verticalPosition);
     verticalPosition += 10;
-    doc.text('Date: ' + dateInput, 10, verticalPosition);
+    doc.text('Date: ' + dateInput, margin, verticalPosition);
     verticalPosition += 10;
-    
-    // Helper function to add text and update vertical position
+
+    // Helper function to add text and check for page breaks
     function addSection(title, listId) {
-        doc.text(title, 10, verticalPosition);
+        if (verticalPosition + 10 > pageHeight) {
+            doc.addPage();
+            verticalPosition = margin;
+        }
+        doc.text(title, margin, verticalPosition);
         verticalPosition += 10;
         const items = document.querySelectorAll(`#${listId} li`);
         items.forEach((item, index) => {
-            doc.text((index + 1) + '. ' + item.childNodes[0].nodeValue.trim(), 10, verticalPosition);
+            if (verticalPosition + 10 > pageHeight) {
+                doc.addPage();
+                verticalPosition = margin;
+            }
+            doc.text((index + 1) + '. ' + item.childNodes[0].nodeValue.trim(), margin, verticalPosition);
             verticalPosition += 10;
         });
         verticalPosition += 10; // Add space between sections
@@ -110,6 +122,7 @@
     // Save the PDF with the date as part of the filename
     doc.save(formattedDate + '_schedule.pdf');
 });
+
 
 </script>
 
