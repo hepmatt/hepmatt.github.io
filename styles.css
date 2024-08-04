@@ -36,6 +36,7 @@
             background-image: url("texture.jpg");
            /* background: #fb2505;*/
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
 .container img {
     max-width: 25%;
     height: auto;
