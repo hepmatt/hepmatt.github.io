@@ -29,17 +29,6 @@
             color: #000000;
             }
 
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-         }
-        .header-container img {
-           max-width: 25%;
-           height: auto;
-         }
-
-
         .container {
             max-width: 800px;
             margin: 0 auto;
