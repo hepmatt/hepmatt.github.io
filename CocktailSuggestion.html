@@ -180,13 +180,10 @@
                 "Sweet_Tequila_Herbal": "Tequila Mojito",
                 "Sweet_Tequila_Fruity": "Mango Margarita"
             };
-
-            // Create the key to find the corresponding cocktail
             const key = `${type}_${spirit}_${flavor}`;
             cocktail = cocktailSuggestions[key] || "No matching cocktail found";
 
-            // Display the result
-            document.getElementById('suggestion-result').textContent = `Your cocktail suggestion is: ${cocktail}`;
+            document.getElementById('suggestion-result').textContent = `Your cocktail suggestion is: ${cocktail}, CHEERS!`;
         }
     </script>
 </body>
