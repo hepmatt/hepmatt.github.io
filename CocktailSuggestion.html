@@ -4,12 +4,103 @@
    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cocktail Suggestion</title>
+     <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+          nav {
+            display: flex;
+            flex-wrap: wrap;
+            background-color: none; 
+            padding: 0;
+            border: 0;
+        }
+        nav a {
+            color: #393e46; /* light black */
+            padding:0.5rem 1rem;
+            text-decoration: none;
+            border: 2px solid #393e46;
+            border-radius: 4px 4px 0 0;
+            background-color: #eeeeee;
+            transition: width 2s, height 4s
+            flex: 1;
+            text-align: center;
+        }
+
+        nav a:hover {
+            width: 150px;
+            background-color: #d3d3d3;
+            color: #000000;
+            }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: url("texture.jpg");
+           /* background: #fb2505;*/
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+        }
+        .contact, .clearance, .profile, .skills, .experience, .education {
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            background: #f4f4f4;
+            margin: 5px 0;
+            padding: 10px;
+            border-left: 4px solid #333;
+        }
+            table {
+            width: 100%;
+        }
+        td {
+            text-align: center;
+            vertical-align: middle;
+        }
+       img {
+            width: 95%;
+            height: auto; 
+            display: inline;
+           transition: transform 0.3s ease;
+        }
+        img:hover 
+        .rotated {
+            transform: rotate(90deg);
+        }
+        
+        .portrait {
+            max-height: 200px; 
+        }
+        .landscape {
+            max-height: 200px; 
+        }
+
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Keep your existing content here -->
+        <div class="profile">
+            <nav>
+                <a href="index.html">Home</a>
+               <a href="projects.html">Projects</a>
+                <a href="Cocktail.html">Cocktail of the Week</a>
+                <a href="resume.html">Resume</a>
+                <a href="contactPage.html">Contact</a>
+            </nav>
 
-        <!-- Cocktail Suggestion Section -->
+        
         <div class="cocktail-suggestion">
             <h3>Cocktail Suggestion</h3>
             <p>Select your preferences to get a unique cocktail suggestion:</p>
@@ -46,20 +137,61 @@
             <p id="suggestion-result"></p>
         </div>
     </div>
-    <footer style="text-align: center;">
-        <!-- Keep your existing footer content here -->
-    </footer>
+
 
     <script>
-        function suggestCocktail() {
+      function suggestCocktail() {
             const type = document.getElementById('cocktail-type').value;
             const spirit = document.getElementById('cocktail-spirit').value;
             const flavor = document.getElementById('cocktail-flavor').value;
 
+            let cocktail;
+
+            // Define cocktail suggestions based on selections
+            const cocktailSuggestions = {
+                "Spirit-forward_Vodka_Smoky": "Smoky Martini",
+                "Spirit-forward_Vodka_Herbal": "Herbal Vodka Gimlet",
+                "Spirit-forward_Vodka_Fruity": "Cosmopolitan",
+                "Spirit-forward_Gin_Smoky": "Smoky Negroni",
+                "Spirit-forward_Gin_Herbal": "Gin & Tonic with a Herbal Twist",
+                "Spirit-forward_Gin_Fruity": "Tom Collins",
+                "Spirit-forward_Whiskey_Smoky": "Smoky Old Fashioned",
+                "Spirit-forward_Whiskey_Herbal": "Herbal Whiskey Sour",
+                "Spirit-forward_Whiskey_Fruity": "Whiskey Smash",
+                "Spirit-forward_Rum_Smoky": "Smoky Rum Old Fashioned",
+                "Spirit-forward_Rum_Herbal": "Mojito with a Herbal Twist",
+                "Spirit-forward_Rum_Fruity": "Mai Tai",
+                "Spirit-forward_Tequila_Smoky": "Smoky Tequila Negroni",
+                "Spirit-forward_Tequila_Herbal": "Herbal Margarita",
+                "Spirit-forward_Tequila_Fruity": "Tequila Sunrise",
+                "Sweet_Vodka_Smoky": "Smoky Black Russian",
+                "Sweet_Vodka_Herbal": "Sweet Basil Lemonade",
+                "Sweet_Vodka_Fruity": "Strawberry Daiquiri",
+                "Sweet_Gin_Smoky": "Smoky Gin Fizz",
+                "Sweet_Gin_Herbal": "Sweet Basil Gimlet",
+                "Sweet_Gin_Fruity": "Gin Bramble",
+                "Sweet_Whiskey_Smoky": "Smoky Maple Bourbon",
+                "Sweet_Whiskey_Herbal": "Honey & Herb Whiskey",
+                "Sweet_Whiskey_Fruity": "Peach Whiskey Sour",
+                "Sweet_Rum_Smoky": "Smoky Rum Punch",
+                "Sweet_Rum_Herbal": "Mint Julep",
+                "Sweet_Rum_Fruity": "Pina Colada",
+                "Sweet_Tequila_Smoky": "Smoky Tequila Sunrise",
+                "Sweet_Tequila_Herbal": "Tequila Mojito",
+                "Sweet_Tequila_Fruity": "Mango Margarita"
+            };
+
+            // Create the key to find the corresponding cocktail
+            const key = `${type}_${spirit}_${flavor}`;
+            cocktail = cocktailSuggestions[key] || "No matching cocktail found";
+
             // Display the result
-            const resultText = `Your cocktail suggestion is a ${type} ${spirit} with a ${flavor} flavor.`;
-            document.getElementById('suggestion-result').textContent = resultText;
+            document.getElementById('suggestion-result').textContent = `Your cocktail suggestion is: ${cocktail}`;
         }
     </script>
 </body>
-</html>
+    <footer style="text-align: center;">
+       <p>Matt Lynn 2024</p>
+        <p>CSCI434: Web Programming.</p>
+    </footer>
+</html> 
