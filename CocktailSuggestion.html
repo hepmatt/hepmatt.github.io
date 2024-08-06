@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Keep your existing head content here -->
+</head>
+<body>
+    <div class="container">
+        <!-- Keep your existing content here -->
+
+        <!-- Cocktail Suggestion Section -->
+        <div class="cocktail-suggestion">
+            <h3>Cocktail Suggestion</h3>
+            <p>Select your preferences to get a unique cocktail suggestion:</p>
+
+            <label for="cocktail-type">1. Choose the cocktail type:</label>
+            <select id="cocktail-type">
+                <option value="Spirit-forward">Spirit-forward</option>
+                <option value="Sweet">Sweet</option>
+            </select>
+
+            <br /><br />
+
+            <label for="cocktail-spirit">2. Choose the type of spirit:</label>
+            <select id="cocktail-spirit">
+                <option value="Vodka">Vodka</option>
+                <option value="Gin">Gin</option>
+                <option value="Whiskey">Whiskey</option>
+                <option value="Rum">Rum</option>
+                <option value="Tequila">Tequila</option>
+            </select>
+
+            <br /><br />
+
+            <label for="cocktail-flavor">3. Choose the flavor profile:</label>
+            <select id="cocktail-flavor">
+                <option value="Smoky">Smoky</option>
+                <option value="Herbal">Herbal</option>
+                <option value="Fruity">Fruity</option>
+            </select>
+
+            <br /><br />
+
+            <button onclick="suggestCocktail()">Get Suggestion</button>
+            <p id="suggestion-result"></p>
+        </div>
+    </div>
+    <footer style="text-align: center;">
+        <!-- Keep your existing footer content here -->
+    </footer>
+
+    <script>
+        function suggestCocktail() {
+            const type = document.getElementById('cocktail-type').value;
+            const spirit = document.getElementById('cocktail-spirit').value;
+            const flavor = document.getElementById('cocktail-flavor').value;
+
+            // Display the result
+            const resultText = `Your cocktail suggestion is a ${type} ${spirit} with a ${flavor} flavor.`;
+            document.getElementById('suggestion-result').textContent = resultText;
+        }
+    </script>
+</body>
+</html>
