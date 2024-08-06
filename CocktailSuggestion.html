@@ -143,54 +143,86 @@
     </footer>
 
     <script>
-      function suggestCocktail() {
-            const type = document.getElementById('cocktail-type').value;
-            const spirit = document.getElementById('cocktail-spirit').value;
-            const flavor = document.getElementById('cocktail-flavor').value;
+     function suggestCocktail() {
+    const type = document.getElementById('cocktail-type').value;
+    const spirit = document.getElementById('cocktail-spirit').value;
+    const flavor = document.getElementById('cocktail-flavor').value;
 
-            let cocktail;
+    let cocktail;
 
-            // Define cocktail suggestions based on selections
-            const cocktailSuggestions = {
-                "Spirit-forward_Vodka_Smoky": "Smoky Moscow Mule: 2oz Vodka
-                   .5oz Mezcal
-                     .5oz Lime Juice,
-                     4oz Ginger Beer.",
-                "Spirit-forward_Vodka_Herbal": "Herbal Vodka Gimlet",
-                "Spirit-forward_Vodka_Fruity": "Cosmopolitan",
-                "Spirit-forward_Gin_Smoky": "Smoky Negroni",
-                "Spirit-forward_Gin_Herbal": "Gin & Tonic with a Herbal Twist",
-                "Spirit-forward_Gin_Fruity": "Tom Collins",
-                "Spirit-forward_Whiskey_Smoky": "Smoky Old Fashioned",
-                "Spirit-forward_Whiskey_Herbal": "Herbal Whiskey Sour",
-                "Spirit-forward_Whiskey_Fruity": "Whiskey Smash",
-                "Spirit-forward_Rum_Smoky": "Smoky Rum Old Fashioned",
-                "Spirit-forward_Rum_Herbal": "Mojito with a Herbal Twist",
-                "Spirit-forward_Rum_Fruity": "Mai Tai",
-                "Spirit-forward_Tequila_Smoky": "Smoky Tequila Negroni",
-                "Spirit-forward_Tequila_Herbal": "Herbal Margarita",
-                "Spirit-forward_Tequila_Fruity": "Tequila Sunrise",
-                "Sweet_Vodka_Smoky": "Smoky Black Russian",
-                "Sweet_Vodka_Herbal": "Sweet Basil Lemonade",
-                "Sweet_Vodka_Fruity": "Strawberry Daiquiri",
-                "Sweet_Gin_Smoky": "Smoky Gin Fizz",
-                "Sweet_Gin_Herbal": "Sweet Basil Gimlet",
-                "Sweet_Gin_Fruity": "Gin Bramble",
-                "Sweet_Whiskey_Smoky": "Smoky Maple Bourbon",
-                "Sweet_Whiskey_Herbal": "Honey & Herb Whiskey",
-                "Sweet_Whiskey_Fruity": "Peach Whiskey Sour",
-                "Sweet_Rum_Smoky": "Smoky Rum Punch",
-                "Sweet_Rum_Herbal": "Mint Julep",
-                "Sweet_Rum_Fruity": "Pina Colada",
-                "Sweet_Tequila_Smoky": "Smoky Tequila Sunrise",
-                "Sweet_Tequila_Herbal": "Tequila Mojito",
-                "Sweet_Tequila_Fruity": "Mango Margarita"
-            };
-            const key = `${type}_${spirit}_${flavor}`;
-            cocktail = cocktailSuggestions[key] || "No matching cocktail found";
+    // Define cocktail suggestions based on selections
+    const cocktailSuggestions = {
+        "Spirit-forward_Vodka_Smoky": {
+            name: "Smoky Moscow Mule",
+            ingredients: [
+                "2 oz Vodka (preferably a high-quality one)",
+                "1/2 oz Mezcal (for the smoky flavor)",
+                "1/2 oz Fresh lime juice",
+                "4 oz Ginger beer",
+                "Ice",
+                "Lime wedge (for garnish)",
+                "Fresh mint sprig (optional)"
+            ]
+        },
+        "Spirit-forward_Vodka_Herbal": {
+            name: "Herbal Vodka Gimlet",
+            ingredients: [
+               "2 oz Vodka",
+               "1 oz Fresh lime juice",
+               "3/4 oz Simple syrup",
+               "3-4 Fresh basil leaves (or another fresh herb like thyme or rosemary)",
+               "Ice",
+               "Basil sprig or lime wheel (for garnish)"
+            ]
+        },
+        "Spirit-forward_Vodka_Fruity": {
+            name: "Cosmopolitan",
+            ingredients: [
+               "2 oz citrus flavor Vodka",
+               "1 oz Cointreau or triple sec",
+               "3/4 oz fresh lime juice",
+               "1/2 oz Cranberry juice",
+               "Ice",
+               "Orange twist or lime wheel (for garnish)"
+            ]
+        },
+          "Spirit-forward_Vodka_Fruity": {
+            name: "Cosmopolitan",
+            ingredients: [
+               "2 oz citrus flavor Vodka",
+               "1 oz Cointreau or triple sec",
+               "3/4 oz fresh lime juice",
+               "1/2 oz Cranberry juice",
+               "Ice",
+               "Orange twist or lime wheel (for garnish)"
+            ]
+        },
+       "Sweet_Vodka_Smoky": {
+          name: "Smoky Black Russian",
+          ingredients: [
+             "2 oz Vodka",
+             "1 oz Coffee liqueur (Kahlua)",
+             "1/2 oz Mezcal",
+             "Ice",
+             "Coffee Beans (for garnish)",
+    };
 
-            document.getElementById('suggestion-result').textContent = `Your cocktail suggestion is: ${cocktail} CHEERS!`;
-        }
+    const key = `${type}_${spirit}_${flavor}`;
+    const selectedCocktail = cocktailSuggestions[key];
+
+    if (selectedCocktail) {
+        cocktail = `
+            <strong>${selectedCocktail.name}</strong><br />
+            <ul>
+                ${selectedCocktail.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
+            </ul>`;
+    } else {
+        cocktail = "No matching cocktail found";
+    }
+
+    document.getElementById('suggestion-result').innerHTML = `Your cocktail suggestion is:<br />${cocktail} CHEERS!`;
+}
+
     </script>
 </body>
   
