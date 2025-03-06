@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkride Tracker</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #333;
+        }
+        input {
+            background-color: #222;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Checkride Tracker</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Last Checkride</th>
+                <th>Next Zone Date</th>
+                <th>Final Zone Month</th>
+                <th>Months in Zone</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+    <button onclick="addRow()">Add Entry</button>
+    
+    <script>
+        function addRow() {
+            let table = document.getElementById("tableBody");
+            let row = table.insertRow();
+            
+            let nameCell = row.insertCell(0);
+            let lastCheckrideCell = row.insertCell(1);
+            let nextZoneCell = row.insertCell(2);
+            let finalZoneCell = row.insertCell(3);
+            let monthsInZoneCell = row.insertCell(4);
+            
+            let nameInput = document.createElement("input");
+            nameCell.appendChild(nameInput);
+            
+            let dateInput = document.createElement("input");
+            dateInput.type = "date";
+            dateInput.onchange = function () {
+                let lastCheckrideDate = new Date(dateInput.value);
+                if (isNaN(lastCheckrideDate)) return;
+                
+                let nextZoneDate = new Date(lastCheckrideDate);
+                nextZoneDate.setFullYear(nextZoneDate.getFullYear() + 1);
+                nextZoneCell.textContent = nextZoneDate.toISOString().split("T")[0];
+                
+                let finalZoneDate = new Date(nextZoneDate);
+                finalZoneDate.setMonth(finalZoneDate.getMonth() + 6);
+                finalZoneCell.textContent = finalZoneDate.toLocaleString('default', { month: 'long' }) + ' ' + finalZoneDate.getFullYear();
+                
+                let today = new Date();
+                let monthsInZone = (today.getFullYear() - nextZoneDate.getFullYear()) * 12 + today.getMonth() - nextZoneDate.getMonth();
+                monthsInZoneCell.textContent = monthsInZone >= 0 ? monthsInZone : 0;
+            };
+            lastCheckrideCell.appendChild(dateInput);
+        }
+    </script>
+</body>
+</html>
