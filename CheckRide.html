@@ -84,7 +84,7 @@
                 nextZoneCell.textContent = nextZoneDate.toISOString().split("T")[0];
                 
                 let finalZoneDate = new Date(nextZoneDate);
-                finalZoneDate.setMonth(finalZoneDate.getMonth() + 6);
+                finalZoneDate.setMonth(finalZoneDate.getMonth() + 5);
                 finalZoneCell.textContent = finalZoneDate.toLocaleString('default', { month: 'long' }) + ' ' + finalZoneDate.getFullYear();
                 
                 let today = new Date();
