@@ -6,93 +6,118 @@
     <title>Checkride Tracker</title>
     <style>
         body {
-            background-color: #121212;
-            color: white;
             font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-top: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input {
+            background: #333;
+            color: #fff;
+        }
+        button {
+            background: #6200ea;
+            color: white;
+            cursor: pointer;
         }
         table {
-            width: 80%;
-            border-collapse: collapse;
+            width: 100%;
             margin-top: 20px;
+            border-collapse: collapse;
         }
         th, td {
-            border: 1px solid #444;
             padding: 10px;
+            border: 1px solid #444;
             text-align: center;
         }
         th {
-            background-color: #333;
+            background: #333;
         }
-        input {
-            background-color: #222;
-            color: white;
-            border: 1px solid #555;
-            padding: 5px;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            input, button {
+                font-size: 14px;
+            }
+            th, td {
+                padding: 8px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
     <h1>Checkride Tracker</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Last Checkride</th>
-                <th>Next Zone Date</th>
-                <th>Final Zone Month</th>
-                <th>Months in Zone</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
-    <button onclick="addRow()">Add Entry</button>
-    
+    <div class="container">
+        <input type="text" id="name" placeholder="Enter Name">
+        <input type="date" id="lastCheckride">
+        <button onclick="addEntry()">Add Entry</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Last Checkride</th>
+                    <th>Next Zone</th>
+                    <th>Final Zone</th>
+                    <th>Months in Zone</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
     <script>
-        function addRow() {
+        function addEntry() {
+            let name = document.getElementById("name").value;
+            let lastCheckride = document.getElementById("lastCheckride").value;
+            
+            if (!name || !lastCheckride) {
+                alert("Please enter all details.");
+                return;
+            }
+
+            let lastDate = new Date(lastCheckride);
+            let nextZone = new Date(lastDate);
+            nextZone.setFullYear(nextZone.getFullYear() + 1);
+            let finalZone = new Date(nextZone);
+            finalZone.setMonth(finalZone.getMonth() + 5);
+            let monthsInZone = Math.floor((finalZone - nextZone) / (1000 * 60 * 60 * 24 * 30));
+            
             let table = document.getElementById("tableBody");
             let row = table.insertRow();
+            row.insertCell(0).textContent = name;
+            row.insertCell(1).textContent = lastCheckride;
+            row.insertCell(2).textContent = nextZone.toISOString().split('T')[0];
+            row.insertCell(3).textContent = finalZone.toISOString().split('T')[0];
+            row.insertCell(4).textContent = monthsInZone;
             
-            let nameCell = row.insertCell(0);
-            let lastCheckrideCell = row.insertCell(1);
-            let nextZoneCell = row.insertCell(2);
-            let finalZoneCell = row.insertCell(3);
-            let monthsInZoneCell = row.insertCell(4);
-            
-            let nameInput = document.createElement("input");
-            nameCell.appendChild(nameInput);
-            
-            let dateInput = document.createElement("input");
-            dateInput.type = "date";
-            dateInput.onchange = function () {
-                let lastCheckrideDate = new Date(dateInput.value);
-                if (isNaN(lastCheckrideDate)) return;
-                
-                let nextZoneDate = new Date(lastCheckrideDate);
-                nextZoneDate.setFullYear(nextZoneDate.getFullYear() + 1);
-                nextZoneCell.textContent = nextZoneDate.toISOString().split("T")[0];
-                
-                let finalZoneDate = new Date(nextZoneDate);
-                finalZoneDate.setMonth(finalZoneDate.getMonth() + 5);
-                finalZoneCell.textContent = finalZoneDate.toLocaleString('default', { month: 'long' }) + ' ' + finalZoneDate.getFullYear();
-                
-                let today = new Date();
-                let monthsInZone = (today.getFullYear() - nextZoneDate.getFullYear()) * 12 + today.getMonth() - nextZoneDate.getMonth();
-                monthsInZoneCell.textContent = monthsInZone >= 0 ? monthsInZone : 0;
-            };
-            lastCheckrideCell.appendChild(dateInput);
+            document.getElementById("name").value = "";
+            document.getElementById("lastCheckride").value = "";
         }
     </script>
 </body>
 </html>
+
