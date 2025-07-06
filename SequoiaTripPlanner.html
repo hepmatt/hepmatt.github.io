@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequoia Trip Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c1a 50%, #6ba81f 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2d5016, #4a7c1a);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 15px 10px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #2d5016;
+            border-bottom: 3px solid #4a7c1a;
+        }
+        
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .day-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4a7c1a;
+        }
+        
+        .day-title {
+            color: #2d5016;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .day-title::before {
+            content: "📅";
+            margin-right: 10px;
+        }
+        
+        .schedule-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .time {
+            font-weight: bold;
+            color: #2d5016;
+            min-width: 80px;
+            margin-right: 15px;
+        }
+        
+        .activity {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .activity-details {
+            color: #666;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+        
+        .checklist-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            color: #2d5016;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .checklist-item:hover {
+            background: #e9ecef;
+        }
+        
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        
+        .checklist-item.checked {
+            background: #d4edda;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        
+        .weather-card {
+            background: linear-gradient(135deg, #87CEEB, #4169E1);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .weather-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .weather-info {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .weather-item {
+            flex: 1;
+        }
+        
+        .weather-temp {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .weather-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .tips-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .tips-title {
+            color: #856404;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .tip-item {
+            margin-bottom: 5px;
+            color: #856404;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a7c1a, #6ba81f);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .share-button {
+            background: linear-gradient(135deg, #4a7c1a, #6ba81f);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+            box-shadow: 0 4px 15px rgba(74, 124, 26, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .share-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 124, 26, 0.4);
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .nav-tab {
+                font-size: 12px;
+                padding: 12px 8px;
+            }
+            
+            .tab-content {
+                padding: 15px;
+            }
+            
+            .day-card {
+                padding: 15px;
+            }
+            
+            .checklist-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌲 Sequoia & Kings Canyon Trip</h1>
+            <p>July 9-11, 2025 • Family of 5 • John Muir Lodge</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('itinerary')">📅 Itinerary</button>
+            <button class="nav-tab" onclick="showTab('packing')">🎒 Packing</button>
+            <button class="nav-tab" onclick="showTab('info')">ℹ️ Trip Info</button>
+        </div>
+        
+        <div id="itinerary" class="tab-content active">
+            <div class="weather-card">
+                <div class="weather-title">🌤️ Expected Weather</div>
+                <div class="weather-info">
+                    <div class="weather-item">
+                        <div class="weather-temp">85°F</div>
+                        <div class="weather-label">Day High</div>
+                    </div>
+                    <div class="weather-item">
+                        <div class="weather-temp">50°F</div>
+                        <div class="weather-label">Night Low</div>
+                    </div>
+                    <div class="weather-item">
+                        <div class="weather-temp">10%</div>
+                        <div class="weather-label">Rain Chance</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="day-card">
+                <div class="day-title">Wednesday, July 9th - Travel Day</div>
+                <div class="schedule-item">
+                    <div class="time">6:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">🚗 Depart Murrieta</div>
+                        <div class="activity-details">Check car, pack cooler, full gas tank</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">12:00 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🛒 Lunch & Grocery Stop</div>
+                        <div class="activity-details">Orange Cove or Fresno - stock up on food</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">2:30 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🎫 Arrive Kings Canyon</div>
+                        <div class="activity-details">Buy park pass, visit Grant Grove Visitor Center</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">4:00 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🏨 Check in John Muir Lodge</div>
+                        <div class="activity-details">Settle in, short walk around Grant Grove</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">7:00 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🍽️ Dinner at Grant Grove Restaurant</div>
+                        <div class="activity-details">Family meal, early bedtime for big day tomorrow</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="day-card">
+                <div class="day-title">Thursday, July 10th - Exploration Day</div>
+                <div class="schedule-item">
+                    <div class="time">7:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">☕ Early Breakfast</div>
+                        <div class="activity-details">Pack hiking lunch, fill water bottles</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">8:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">🚗 Drive to Sequoia National Park</div>
+                        <div class="activity-details">1 hour drive on winding mountain roads</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">9:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">🌲 General Sherman Tree Trail</div>
+                        <div class="activity-details">1.2 miles • World's largest tree! • Go early for fewer crowds</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">11:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">🥾 Congress Trail (Optional)</div>
+                        <div class="activity-details">Extension hike to see more giant sequoias</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">12:30 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🧺 Picnic Lunch</div>
+                        <div class="activity-details">Giant Forest area • Rest and refuel</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">2:00 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🚗 Return to Kings Canyon</div>
+                        <div class="activity-details">Drive back for afternoon hike</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">3:30 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">⛰️ Big Baldy Trail</div>
+                        <div class="activity-details">4.2 miles • Summit views • Perfect for sunset photos</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">7:30 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🍽️ Dinner & Rest</div>
+                        <div class="activity-details">Well-deserved meal and relaxation</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="day-card">
+                <div class="day-title">Friday, July 11th - Departure Day</div>
+                <div class="schedule-item">
+                    <div class="time">8:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">☕ Breakfast & Pack</div>
+                        <div class="activity-details">Final preparations, check out at noon</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">9:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">🌲 General Grant Tree Trail</div>
+                        <div class="activity-details">0.7 mile loop • 2nd largest tree • Easy family walk</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">10:00 AM</div>
+                    <div class="activity">
+                        <div class="activity-title">🧳 Check Out & Depart</div>
+                        <div class="activity-details">Final photos, head home with amazing memories</div>
+                    </div>
+                </div>
+                <div class="schedule-item">
+                    <div class="time">6:00 PM</div>
+                    <div class="activity">
+                        <div class="activity-title">🏠 Arrive Home</div>
+                        <div class="activity-details">Safe travels back to Murrieta</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="packing" class="tab-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0% Complete</div>
+            
+            <div class="checklist-section">
+                <div class="section-title">👔 Clothing (Each Person)</div>
+                <div class="checklist-grid">
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>2-3 hiking shirts (moisture-wicking)</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>1 warm layer (fleece/sweatshirt)</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>1 rain jacket/windbreaker</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>2 pairs hiking pants/shorts</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>3-4 pairs underwear</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>3-4 pairs hiking socks</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Pajamas/sleepwear</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Sun hat & warm hat</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checklist-section">
+                <div class="section-title">👟 Footwear</div>
+                <div class="checklist-grid">
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Sturdy hiking boots/shoes</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Comfortable walking shoes</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Sandals/flip-flops</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checklist-section">
+                <div class="section-title">🎒 Hiking & Outdoor Gear</div>
+                <div class="checklist-grid">
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>5 water bottles/hydration packs</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Daypack/backpack</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Sunscreen SPF 30+ (ESSENTIAL)</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Sunglasses</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>First aid kit</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Headlamps/flashlights</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Camera/phone for photos</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Portable chargers/power banks</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checklist-section">
+                <div class="section-title">🍎 Food & Supplies</div>
+                <div class="checklist-grid">
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Instant oatmeal (15 packets)</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Granola bars (10)</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Fresh fruit (bananas, apples)</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Sandwich supplies</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Trail mix & nuts</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Dinner items (chicken, rice, etc.)</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Cooler with ice packs</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Bear-safe storage containers</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checklist-section">
+                <div class="section-title">🧴 Personal Care</div>
+                <div class="checklist-grid">
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Toiletries & personal items</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Medications</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Hand sanitizer & wet wipes</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Lip balm with SPF</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checklist-section">
+                <div class="section-title">📱 Electronics & Documents</div>
+                <div class="checklist-grid">
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Driver's licenses</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Credit cards & cash</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Car documents & insurance</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Phone & camera chargers</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" onchange="updateProgress()">
+                        <span>Park pass money ($35)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="info" class="tab-content">
+            <div class="day-card">
+                <div class="day-title">📞 Important Contacts</div>
+                <div style="line-height: 1.8;">
+                    <strong>Park Service:</strong> (559) 565-3341<br>
+                    <strong>John Muir Lodge:</strong> Check confirmation<br>
+                    <strong>Emergency:</strong> 911
+                </div>
+            </div>
+            
+            <div class="day-card">
+                <div class="day-title">🚗 Driving Tips</div>
+                <div style="line-height: 1.8;">
+                    • Mountain roads are steep and winding<br>
+                    • Allow extra time for travel<br>
+                    • Use turnouts for faster traffic<br>
+                    • Keep gas tank full<br>
+                    • Check tire pressure before trip
+                </div>
+            </div>
+            
+            <div class="tips-section">
+                <div class="tips-title">🐻 Bear Safety & Park Guidelines</div>
+                <div class="tip-item">• Store ALL food in bear-safe containers</div>
+                <div class="tip-item">• Stay on designated trails</div>
+                <div class="tip-item">• Pack out all trash</div>
+                <div class="tip-item">• Keep distance from wildlife</div>
+                <div class="tip-item">• Mountain weather changes quickly - be prepared</div>
+            </div>
+            
+            <div class="day-card">
+                <div class="day-title">🌡️ What to Expect</div>
+                <div style="line-height: 1.8;">
+                    <strong>Daytime:</strong> 75-85°F, sunny<br>
+                    <strong>Nighttime:</strong> 40-50°F, cool<br>
+                    <strong>Afternoon thunderstorms possible</strong><br>
+                    <strong>Elevation:</strong> 6,000+ feet
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="share-button" onclick="shareTrip()">📤 Share Trip</button>
+                <button class="share-button" onclick="window.print()">🖨️ Print</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('#packing input[type="checkbox"]');
+            const checkedBoxes = document.querySelectorAll('#packing input[type="checkbox"]:checked');
+            const percentage = Math.round((checkedBoxes.length / checkboxes.length) * 100);
+            
+            document.getElementById('progress-fill').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = percentage + '% Complete';
+            
+            // Update visual feedback for checked items
+            checkboxes.forEach(checkbox => {
+                const item = checkbox.closest('.checklist-item');
+                if (checkbox.checked) {
+                    item.classList.add('checked');
+                } else {
+                    item.classList.remove('checked');
+                }
+            });
+        }
+        
+        function shareTrip() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Sequoia & Kings Canyon Trip Plan',
+                    text: 'Check out our family trip plan for Sequoia & Kings Canyon National Parks!',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                const url = window.location.href;
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Trip URL copied to clipboard! Share it with your family.');
+                });
+            }
+        }
+        
+        // Save checkbox states to localStorage
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox') {
+                const checkboxes = document.querySelectorAll('#packing input[type="checkbox"]');
+                const states = Array.from(checkboxes).map(cb => cb.checked);
+                localStorage.setItem('sequoiaTripChecklist', JSON.stringify(states));
+            }
+        });
+        
+        // Load checkbox states from localStorage
+        window.addEventListener('load', function() {
+            const saved = localStorage.getItem('sequoiaTripChecklist');
+            if (saved) {
+                const states = JSON.parse(saved);
+                const checkboxes = document.querySelectorAll('#packing input[type="checkbox"]');
+                states.forEach((state, index) => {
+                    if (checkboxes[index]) {
+                        checkboxes[index].checked = state;
+                    }
+                });
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+</html>
