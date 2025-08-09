@@ -386,10 +386,7 @@
                 document.getElementById('successMessage').classList.remove('show');
             }, 3000);
 
-            // Clear form after submission
-            setTimeout(() => {
-                clearForm();
-            }, 3500);
+            // Do NOT clear form automatically - removed the setTimeout
         });
 
         function clearForm() {
