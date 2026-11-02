@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Party Tracker</title>
+<style>
+  :root {
+    --bg: #f4f4f4;
+    --card: #ffffff;
+    --ink: #1d2433;
+    --muted: #5b6475;
+    --line: #d9dde5;
+    --red: #e52521;
+    --yellow: #fbd000;
+    --blue: #049cd8;
+    --green: #1f8a4c;
+    --gold: #c99a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151c;
+      --card: #1c212b;
+      --ink: #e8ebf1;
+      --muted: #9aa3b5;
+      --line: #2e3542;
+      --green: #4cc27f;
+      --gold: #f0c419;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; }
+  header { background: var(--red); color: #fff; padding: 1rem; text-align: center; border-bottom: 6px solid var(--yellow); }
+  header h1 { margin: 0; font-size: 1.6rem; }
+  header p { margin: 0.25rem 0 0; font-size: 0.95rem; }
+  header a { color: #fff3b0; }
+  main { max-width: 860px; margin: 0 auto; padding: 1rem; }
+  .banner { background: #fff3b0; color: #4a3b00; border: 1px solid var(--gold); border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 1rem; font-size: 0.92rem; }
+  .banner.error { background: #ffd9d6; color: #6b0f0a; border-color: var(--red); }
+  .tabs { display: flex; gap: 0.35rem; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 2px; }
+  .tabs button {
+    flex: 0 0 auto; border: 2px solid var(--line); background: var(--card); color: var(--ink);
+    padding: 0.5rem 0.9rem; border-radius: 999px; cursor: pointer; font-size: 0.95rem;
+  }
+  .tabs button[aria-selected="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem; margin-bottom: 1rem; }
+  h2 { margin: 0 0 0.75rem; font-size: 1.2rem; }
+  h3 { margin: 1rem 0 0.5rem; font-size: 1rem; }
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.2rem; }
+  input, select {
+    width: 100%; font-size: 1rem; padding: 0.5rem; border: 2px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--ink);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--blue); }
+  input[type="checkbox"] { width: auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }
+  .photo-box { border: 2px dashed var(--line); border-radius: 10px; padding: 0.75rem; text-align: center; margin-bottom: 1rem; }
+  .photo-box img { max-width: 100%; max-height: 360px; border-radius: 8px; display: block; margin: 0.6rem auto 0; }
+  .player {
+    display: grid; grid-template-columns: 2rem 1.4fr 1.3fr 0.8fr 0.8fr 0.8fr 2rem;
+    gap: 0.4rem; align-items: end; padding: 0.6rem 0; border-bottom: 1px solid var(--line);
+  }
+  .player .num { font-weight: bold; color: var(--muted); padding-bottom: 0.6rem; }
+  .player .cpu { display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+  .player .cpu label { display: inline; margin: 0; }
+  .icon-btn { background: transparent; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; padding-bottom: 0.45rem; }
+  .icon-btn:hover { color: var(--red); }
+  @media (max-width: 640px) {
+    .player { grid-template-columns: 1fr 1fr 1fr; }
+    .player .num { grid-column: 1 / -1; padding: 0; }
+    .player .name, .player .char { grid-column: span 3; }
+    .player .icon-btn { grid-column: 3; justify-self: end; }
+  }
+  .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; align-items: center; }
+  button.primary { background: var(--red); color: #fff; border: none; padding: 0.7rem 1.3rem; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+  button.primary:disabled { opacity: 0.5; cursor: default; }
+  button.secondary { background: transparent; color: var(--ink); border: 2px solid var(--line); padding: 0.55rem 1rem; border-radius: 8px; font-size: 0.95rem; cursor: pointer; }
+  .msg { font-size: 0.95rem; }
+  .msg.ok { color: var(--green); } .msg.err { color: var(--red); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.5rem 0.4rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: normal; font-size: 0.82rem; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.unranked td { color: var(--muted); }
+  .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--blue); vertical-align: middle; margin-right: 0.4rem; }
+  .stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem; }
+  .tile .v { font-size: 1.4rem; font-weight: bold; }
+  .tile .k { font-size: 0.8rem; color: var(--muted); }
+  .game { border-bottom: 1px solid var(--line); padding: 0.75rem 0; }
+  .game:last-child { border-bottom: none; }
+  .game-head { display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; align-items: baseline; }
+  .game-head b { font-size: 1rem; }
+  .places { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+  .pill { border: 1px solid var(--line); border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.85rem; }
+  .pill.first { border-color: var(--gold); background: rgba(251,208,0,0.18); font-weight: bold; }
+  .pill.cpu { opacity: 0.65; }
+  .link-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 0.85rem; padding: 0 0.3rem; }
+  .link-btn.danger { color: var(--red); }
+  dialog { border: none; border-radius: 12px; padding: 0.75rem; max-width: 95vw; background: var(--card); color: var(--ink); }
+  dialog img { max-width: 90vw; max-height: 80vh; display: block; border-radius: 8px; }
+  dialog::backdrop { background: rgba(0,0,0,0.7); }
+  .note { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mario Party Jamboree Tracker</h1>
+  <p>Snap the results screen, log the game, settle the arguments. <a href="index.html">Home</a> &middot; <a href="projects.html">Projects</a></p>
+</header>
+
+<main>
+  <div id="banner" class="banner hidden"></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="add" aria-selected="true">Add game</button>
+    <button role="tab" data-tab="players" aria-selected="false">Players</button>
+    <button role="tab" data-tab="h2h" aria-selected="false">Head to head</button>
+    <button role="tab" data-tab="characters" aria-selected="false">Characters</button>
+    <button role="tab" data-tab="boards" aria-selected="false">Boards</button>
+    <button role="tab" data-tab="history" aria-selected="false">History</button>
+  </nav>
+
+  <!-- ADD GAME -->
+  <section id="tab-add" class="card">
+    <h2>Add a game</h2>
+    <div class="photo-box">
+      <label for="photoInput" style="display:inline">Results screen photo (optional)</label><br>
+      <input type="file" id="photoInput" accept="image/*" style="max-width:320px;margin:0.4rem auto 0">
+      <img id="photoPreview" class="hidden" alt="Results screen preview">
+      <p class="note">Keep the photo open while you fill in the rows below. It is shrunk and saved with the game.</p>
+    </div>
+
+    <div class="grid">
+      <div><label for="gDate">Date</label><input type="date" id="gDate"></div>
+      <div><label for="gBoard">Board</label><select id="gBoard"></select></div>
+      <div><label for="gMode">Mode</label><select id="gMode"></select></div>
+      <div><label for="gTurns">Turns</label><select id="gTurns"><option>10</option><option selected>20</option><option>30</option></select></div>
+    </div>
+    <div id="otherBoardWrap" class="hidden" style="margin-top:0.75rem">
+      <label for="gBoardOther">Board name</label><input id="gBoardOther" maxlength="60">
+    </div>
+
+    <h3>Players</h3>
+    <div id="playerRows"></div>
+    <datalist id="nameList"></datalist>
+
+    <div class="actions">
+      <button class="secondary" id="addRowBtn" type="button">+ Add player</button>
+      <button class="primary" id="saveBtn" type="button">Save game</button>
+      <span id="saveMsg" class="msg"></span>
+    </div>
+    <p class="note">Tick CPU for computer players. They take up a place but are left out of player and character stats. Tied players share a place, and a tie for 1st gives each of them a win.</p>
+  </section>
+
+  <!-- PLAYERS -->
+  <section id="tab-players" class="hidden">
+    <div class="stat-tiles" id="tiles"></div>
+    <div class="card">
+      <h2>Players</h2>
+      <div class="table-wrap"><table id="playersTable"></table></div>
+      <p class="note"><b>Win %</b> is wins divided by games that person actually played, so missing game night does not hurt you.
+      <b>vs. luck</b> compares wins to what pure chance would give in those same games (1 in 4 for a 4-player game, 1 in 2 for 2v2).
+      1.00x is average, 2.00x is twice as many wins as luck. Players with fewer than 3 games are listed below the ranked players.</p>
+    </div>
+  </section>
+
+  <!-- HEAD TO HEAD -->
+  <section id="tab-h2h" class="card hidden">
+    <h2>Head to head</h2>
+    <p class="muted">Only counts games where both people played, which is the fairest comparison when the group changes night to night. "Ahead" means finished in a better place.</p>
+    <div style="max-width:260px;margin-bottom:0.75rem"><label for="h2hPlayer">Player</label><select id="h2hPlayer"></select></div>
+    <div class="table-wrap"><table id="h2hTable"></table></div>
+  </section>
+
+  <!-- CHARACTERS -->
+  <section id="tab-characters" class="card hidden">
+    <h2>Characters</h2>
+    <div class="table-wrap"><table id="charTable"></table></div>
+    <p class="note">Human players only.</p>
+  </section>
+
+  <!-- BOARDS -->
+  <section id="tab-boards" class="card hidden">
+    <h2>Boards</h2>
+    <div class="table-wrap"><table id="boardTable"></table></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="tab-history" class="card hidden">
+    <h2>Game history</h2>
+    <div id="historyList"></div>
+  </section>
+</main>
+
+<dialog id="photoDialog">
+  <img id="dialogImg" alt="Results screen">
+  <div class="actions" style="justify-content:flex-end;margin-top:0.5rem"><button class="secondary" id="closeDialog">Close</button></div>
+</dialog>
+
+<script type="module">
+/* =====================================================================
+   1. PASTE YOUR FIREBASE WEB CONFIG HERE
+   Firebase console > Project settings > General > Your apps > Web app > Config.
+   Until you do, the page runs in demo mode and saves only to this browser.
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+/* ---------- Game data: Super Mario Party Jamboree ---------- */
+const CHARACTERS = [
+  "Mario", "Luigi", "Peach", "Daisy", "Wario", "Waluigi", "Yoshi", "Birdo",
+  "Rosalina", "Donkey Kong", "Toad", "Toadette", "Boo", "Shy Guy", "Bowser",
+  "Bowser Jr.", "Goomba", "Koopa Troopa", "Monty Mole", "Pauline", "Ninji", "Spike"
+];
+const BOARDS = [
+  "Mega Wiggler's Tree Party", "Rainbow Galleria", "Goomba Lagoon", "Roll 'em Raceway",
+  "King Bowser's Keep", "Mario's Rainbow Castle", "Western Land", "Other"
+];
+const MODES = ["Party", "Partner Party", "Other"];
+const MAX_PLAYERS = 8;
+const MIN_RANKED_GAMES = 3;
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const keyOf = name => name.trim().toLowerCase().replace(/\s+/g, " ");
+const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "-";
+const one = (a, b) => b ? (a / b).toFixed(1) : "-";
+const millis = t => (t && typeof t.toMillis === "function") ? t.toMillis() : (typeof t === "number" ? t : 0);
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const ordinal = n => n + ({ 1: "st", 2: "nd", 3: "rd" }[n] || "th");
+function fillSelect(sel, items, selected) {
+  sel.innerHTML = items.map(v => `<option${v === selected ? " selected" : ""}>${esc(v)}</option>`).join("");
+}
+function showBanner(text, isError) {
+  const b = $("banner");
+  b.textContent = text;
+  b.classList.toggle("error", !!isError);
+  b.classList.remove("hidden");
+}
+
+/* =====================================================================
+   2. STORAGE: Firestore when configured, browser-only demo otherwise.
+   games/{id}  = { date, board, mode, turns, players[], hasPhoto, createdAt }
+   photos/{id} = { data }   (photo kept in its own doc so the game list stays small)
+   ===================================================================== */
+const configured = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE");
+let store;
+
+if (configured) {
+  const V = "10.12.2";
+  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+  const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
+  const db = fs.getFirestore(initializeApp(firebaseConfig));
+  store = {
+    subscribe(cb) {
+      fs.onSnapshot(fs.collection(db, "games"),
+        snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+        err => showBanner("Could not load games from Firebase: " + err.message, true));
+    },
+    async add(game, photo) {
+      const ref = fs.doc(fs.collection(db, "games"));
+      if (photo) await fs.setDoc(fs.doc(db, "photos", ref.id), { data: photo });
+      await fs.setDoc(ref, { ...game, hasPhoto: !!photo, createdAt: fs.serverTimestamp() });
+    },
+    async remove(game) {
+      await fs.deleteDoc(fs.doc(db, "games", game.id));
+      if (game.hasPhoto) await fs.deleteDoc(fs.doc(db, "photos", game.id));
+    },
+    async photo(id) {
+      const snap = await fs.getDoc(fs.doc(db, "photos", id));
+      return snap.exists() ? snap.data().data : null;
+    }
+  };
+} else {
+  showBanner("Demo mode: games are saved only in this browser. Paste your Firebase config into MarioPartyTracker.html to share results across devices.");
+  const read = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
+  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+  let listener = () => {};
+  const emit = () => listener(Object.entries(read("mpGames")).map(([id, g]) => ({ id, ...g })));
+  store = {
+    subscribe(cb) { listener = cb; emit(); },
+    async add(game, photo) {
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      const games = read("mpGames");
+      games[id] = { ...game, hasPhoto: false, createdAt: Date.now() };
+      if (photo) {
+        const photos = read("mpPhotos");
+        photos[id] = photo;
+        games[id].hasPhoto = write("mpPhotos", photos);  // browser storage can fill up; keep the game anyway
+      }
+      if (!write("mpGames", games)) throw new Error("Browser storage is full or blocked.");
+      emit();
+    },
+    async remove(game) {
+      const games = read("mpGames"); delete games[game.id]; write("mpGames", games);
+      const photos = read("mpPhotos"); delete photos[game.id]; write("mpPhotos", photos);
+      emit();
+    },
+    async photo(id) { return read("mpPhotos")[id] || null; }
+  };
+}
+
+/* =====================================================================
+   3. STATS. This is the "GROUP BY" layer, done in the browser.
+   ===================================================================== */
+function computeStats(games) {
+  const people = new Map(), chars = new Map(), boards = new Map(), pairs = new Map();
+  const get = (map, key, init) => { if (!map.has(key)) map.set(key, init()); return map.get(key); };
+
+  for (const g of games) {
+    const players = g.players || [];
+    const n = players.length || 1;
+    const teamGame = g.mode === "Partner Party";
+    const winChance = teamGame ? 0.5 : 1 / n;  // what luck alone would give
+    const humans = players.filter(p => !p.cpu && p.name);
+    const winners = players.filter(p => p.place === 1);
+
+    const b = get(boards, g.board || "Unknown", () => ({ name: g.board || "Unknown", games: 0, winners: new Map(), stars: 0, slots: 0 }));
+    b.games++;
+    for (const w of winners) {
+      const label = w.cpu ? "CPU" : w.name.trim();
+      const k = w.cpu ? "cpu" : keyOf(w.name);
+      const e = get(b.winners, k, () => ({ name: label, wins: 0 }));
+      e.wins++;
+    }
+
+    for (const p of humans) {
+      const k = keyOf(p.name);
+      const s = get(people, k, () => ({ name: p.name.trim(), games: 0, wins: 0, expected: 0, stars: 0, coins: 0, placeSum: 0, chars: new Map(), boardWins: new Map() }));
+      const win = p.place === 1;
+      s.games++; s.wins += win ? 1 : 0; s.expected += winChance;
+      s.stars += p.stars || 0; s.coins += p.coins || 0; s.placeSum += p.place || 0;
+      s.chars.set(p.character, (s.chars.get(p.character) || 0) + 1);
+      if (win) s.boardWins.set(g.board, (s.boardWins.get(g.board) || 0) + 1);
+      b.stars += p.stars || 0; b.slots++;
+
+      const c = get(chars, p.character || "Unknown", () => ({ name: p.character || "Unknown", picks: 0, wins: 0, stars: 0, players: new Map() }));
+      c.picks++; c.wins += win ? 1 : 0; c.stars += p.stars || 0;
+      c.players.set(s.name, (c.players.get(s.name) || 0) + 1);
+    }
+
+    // Head to head: every pair of humans in this game.
+    for (let i = 0; i < humans.length; i++) {
+      for (let j = i + 1; j < humans.length; j++) {
+        let a = humans[i], c = humans[j];
+        if (keyOf(a.name) > keyOf(c.name)) [a, c] = [c, a];
+        const pk = keyOf(a.name) + "|" + keyOf(c.name);
+        const r = get(pairs, pk, () => ({ a: keyOf(a.name), b: keyOf(c.name), games: 0, aAhead: 0, bAhead: 0, ties: 0 }));
+        r.games++;
+        if (a.place < c.place) r.aAhead++; else if (c.place < a.place) r.bAhead++; else r.ties++;
+      }
+    }
+  }
+  return { people, chars, boards, pairs };
+}
+const topOf = map => { let best = null, n = 0; for (const [k, v] of map) if (v > n) { best = k; n = v; } return best ? { name: best, n } : null; };
+
+/* =====================================================================
+   4. RENDERING
+   ===================================================================== */
+let allGames = [];
+let stats = computeStats([]);
+
+function render() {
+  allGames.sort((x, y) => (y.date || "").localeCompare(x.date || "") || millis(y.createdAt) - millis(x.createdAt));
+  stats = computeStats(allGames);
+  renderNameList();
+  renderPlayers();
+  renderH2H();
+  renderChars();
+  renderBoards();
+  renderHistory();
+}
+
+function renderNameList() {
+  $("nameList").innerHTML = [...stats.people.values()].map(p => `<option value="${esc(p.name)}">`).join("");
+}
+
+function renderPlayers() {
+  const list = [...stats.people.values()].map(p => ({ ...p, rate: p.wins / p.games }));
+  list.sort((a, b) =>
+    (b.games >= MIN_RANKED_GAMES) - (a.games >= MIN_RANKED_GAMES) || b.rate - a.rate || b.wins - a.wins || b.stars - a.stars);
+
+  const totalStars = list.reduce((s, p) => s + p.stars, 0);
+  const champ = list.find(p => p.games >= MIN_RANKED_GAMES);
+  const starKing = [...list].sort((a, b) => b.stars - a.stars)[0];
+  $("tiles").innerHTML = [
+    ["Games logged", allGames.length],
+    ["Stars collected", totalStars],
+    ["Best win %", champ ? `${esc(champ.name)} ${pct(champ.wins, champ.games)}` : "-"],
+    ["Most stars", starKing ? `${esc(starKing.name)} ${starKing.stars}` : "-"]
+  ].map(([k, v]) => `<div class="tile"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
+
+  if (!list.length) { $("playersTable").innerHTML = `<tr><td class="muted">No games yet. Add one on the first tab.</td></tr>`; return; }
+  $("playersTable").innerHTML =
+    `<thead><tr><th>#</th><th>Player</th><th class="n">Games</th><th class="n">Wins</th><th class="n">Win %</th><th class="n">vs. luck</th>
+     <th class="n">Stars</th><th class="n">Stars/game</th><th class="n">Avg place</th><th>Main</th><th>Best board</th></tr></thead><tbody>` +
+    list.map((p, i) => {
+      const ranked = p.games >= MIN_RANKED_GAMES;
+      const main = topOf(p.chars), board = topOf(p.boardWins);
+      return `<tr class="${ranked ? "" : "unranked"}">
+        <td>${ranked ? i + 1 : "-"}</td><td><b>${esc(p.name)}</b></td>
+        <td class="n">${p.games}</td><td class="n">${p.wins}</td>
+        <td class="n"><span class="bar" style="width:${Math.round(p.rate * 40)}px"></span>${pct(p.wins, p.games)}</td>
+        <td class="n">${p.expected ? (p.wins / p.expected).toFixed(2) + "x" : "-"}</td>
+        <td class="n">${p.stars}</td><td class="n">${one(p.stars, p.games)}</td><td class="n">${one(p.placeSum, p.games)}</td>
+        <td>${main ? esc(main.name) : "-"}</td><td>${board ? esc(board.name) + " (" + board.n + ")" : "-"}</td></tr>`;
+    }).join("") + "</tbody>";
+}
+
+function renderH2H() {
+  const sel = $("h2hPlayer");
+  const names = [...stats.people.entries()].sort((a, b) => b[1].games - a[1].games);
+  const current = sel.value;
+  sel.innerHTML = names.map(([k, p]) => `<option value="${esc(k)}">${esc(p.name)}</option>`).join("");
+  if (names.some(([k]) => k === current)) sel.value = current;
+  const me = sel.value;
+  if (!me) { $("h2hTable").innerHTML = `<tr><td class="muted">No games yet.</td></tr>`; return; }
+
+  const rows = [];
+  for (const r of stats.pairs.values()) {
+    if (r.a !== me && r.b !== me) continue;
+    const meIsA = r.a === me;
+    const other = stats.people.get(meIsA ? r.b : r.a);
+    const ahead = meIsA ? r.aAhead : r.bAhead, behind = meIsA ? r.bAhead : r.aAhead;
+    rows.push({ name: other.name, games: r.games, ahead, behind, ties: r.ties });
+  }
+  rows.sort((a, b) => b.games - a.games);
+  if (!rows.length) { $("h2hTable").innerHTML = `<tr><td class="muted">${esc(stats.people.get(me).name)} has not played with anyone else yet.</td></tr>`; return; }
+  $("h2hTable").innerHTML =
+    `<thead><tr><th>Opponent</th><th class="n">Games together</th><th class="n">Finished ahead</th><th class="n">Finished behind</th><th class="n">Tied</th><th class="n">Ahead %</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td><b>${esc(r.name)}</b></td><td class="n">${r.games}</td><td class="n">${r.ahead}</td><td class="n">${r.behind}</td><td class="n">${r.ties}</td><td class="n">${pct(r.ahead, r.games)}</td></tr>`).join("") +
+    "</tbody>";
+}
+
+function renderChars() {
+  const list = [...stats.chars.values()].sort((a, b) => b.wins - a.wins || b.wins / b.picks - a.wins / a.picks || b.picks - a.picks);
+  if (!list.length) { $("charTable").innerHTML = `<tr><td class="muted">No games yet.</td></tr>`; return; }
+  $("charTable").innerHTML =
+    `<thead><tr><th>Character</th><th class="n">Picks</th><th class="n">Wins</th><th class="n">Win %</th><th class="n">Stars/game</th><th>Played most by</th></tr></thead><tbody>` +
+    list.map(c => { const by = topOf(c.players); return `<tr><td><b>${esc(c.name)}</b></td><td class="n">${c.picks}</td><td class="n">${c.wins}</td>
+      <td class="n">${pct(c.wins, c.picks)}</td><td class="n">${one(c.stars, c.picks)}</td><td>${by ? esc(by.name) : "-"}</td></tr>`; }).join("") +
+    "</tbody>";
+}
+
+function renderBoards() {
+  const list = [...stats.boards.values()].sort((a, b) => b.games - a.games);
+  if (!list.length) { $("boardTable").innerHTML = `<tr><td class="muted">No games yet.</td></tr>`; return; }
+  $("boardTable").innerHTML =
+    `<thead><tr><th>Board</th><th class="n">Games</th><th>Top winner</th><th class="n">Avg stars per player</th></tr></thead><tbody>` +
+    list.map(b => {
+      let top = null; for (const w of b.winners.values()) if (!top || w.wins > top.wins) top = w;
+      return `<tr><td><b>${esc(b.name)}</b></td><td class="n">${b.games}</td><td>${top ? esc(top.name) + " (" + top.wins + ")" : "-"}</td><td class="n">${one(b.stars, b.slots)}</td></tr>`;
+    }).join("") + "</tbody>";
+}
+
+function renderHistory() {
+  const box = $("historyList");
+  if (!allGames.length) { box.innerHTML = `<p class="muted">No games yet.</p>`; return; }
+  box.innerHTML = allGames.map(g => {
+    const players = [...(g.players || [])].sort((a, b) => a.place - b.place);
+    return `<div class="game">
+      <div class="game-head">
+        <span><b>${esc(g.board)}</b> <span class="muted">${esc(g.date)} &middot; ${esc(g.mode)} &middot; ${esc(g.turns)} turns</span></span>
+        <span>${g.hasPhoto ? `<button class="link-btn" data-photo="${esc(g.id)}">View photo</button>` : ""}
+          <button class="link-btn danger" data-del="${esc(g.id)}">Delete</button></span>
+      </div>
+      <div class="places">${players.map(p =>
+        `<span class="pill ${p.place === 1 ? "first" : ""} ${p.cpu ? "cpu" : ""}">${ordinal(p.place)} ${esc(p.cpu ? "CPU" : p.name)} (${esc(p.character)}) &#9733;${esc(p.stars)}</span>`).join("")}
+      </div></div>`;
+  }).join("");
+}
+
+/* =====================================================================
+   5. ADD GAME FORM
+   ===================================================================== */
+let photoData = null;
+
+function playerRow() {
+  const div = document.createElement("div");
+  div.className = "player";
+  div.innerHTML = `
+    <span class="num"></span>
+    <div class="name"><label>Name</label><input class="p-name" list="nameList" maxlength="30" placeholder="Name">
+      <div class="cpu"><input type="checkbox" class="p-cpu"><label>CPU</label></div></div>
+    <div class="char"><label>Character</label><select class="p-char"></select></div>
+    <div><label>Place</label><select class="p-place"></select></div>
+    <div><label>Stars</label><input class="p-stars" type="number" inputmode="numeric" min="0" max="99" value="0"></div>
+    <div><label>Coins</label><input class="p-coins" type="number" inputmode="numeric" min="0" max="999" value="0"></div>
+    <button type="button" class="icon-btn" title="Remove player" aria-label="Remove player">&times;</button>`;
+  fillSelect(div.querySelector(".p-char"), CHARACTERS);
+  div.querySelector(".p-cpu").addEventListener("change", e => {
+    const name = div.querySelector(".p-name");
+    name.disabled = e.target.checked;
+    if (e.target.checked) name.value = "";
+  });
+  div.querySelector(".p-cpu + label").addEventListener("click", () => div.querySelector(".p-cpu").click());
+  div.querySelector(".icon-btn").addEventListener("click", () => {
+    if ($("playerRows").children.length > 2) { div.remove(); renumber(); }
+  });
+  return div;
+}
+function renumber() {
+  const rows = [...$("playerRows").children];
+  rows.forEach((r, i) => {
+    r.querySelector(".num").textContent = "P" + (i + 1);
+    const place = r.querySelector(".p-place");
+    const keep = place.options.length ? place.selectedIndex + 1 : i + 1;
+    fillSelect(place, rows.map((_, j) => ordinal(j + 1)));
+    place.selectedIndex = Math.min(keep, rows.length) - 1;
+  });
+  $("addRowBtn").disabled = rows.length >= MAX_PLAYERS;
+}
+function resetForm() {
+  $("playerRows").innerHTML = "";
+  for (let i = 0; i < 4; i++) $("playerRows").appendChild(playerRow());
+  renumber();
+  $("photoInput").value = "";
+  $("photoPreview").classList.add("hidden");
+  photoData = null;
+}
+
+// Shrink the photo so it fits in one Firestore document (1 MB limit).
+async function compressPhoto(file) {
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  let max = 1100, quality = 0.7, data;
+  do {
+    const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    data = c.toDataURL("image/jpeg", quality);
+    max *= 0.8; quality = Math.max(0.4, quality - 0.1);
+  } while (data.length > 700000 && max > 300);
+  return data;
+}
+
+$("photoInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    photoData = await compressPhoto(file);
+    $("photoPreview").src = photoData;
+    $("photoPreview").classList.remove("hidden");
+  } catch (err) {
+    photoData = null;
+    setMsg("Could not read that image: " + err.message, true);
+  }
+});
+
+function setMsg(text, isErr) {
+  const m = $("saveMsg");
+  m.textContent = text;
+  m.className = "msg " + (isErr ? "err" : "ok");
+}
+
+function readForm() {
+  const board = $("gBoard").value === "Other" ? $("gBoardOther").value.trim() : $("gBoard").value;
+  if (!board) throw new Error("Enter the board name.");
+  const date = $("gDate").value;
+  if (!date) throw new Error("Pick a date.");
+  const players = [...$("playerRows").children].map(r => ({
+    name: r.querySelector(".p-cpu").checked ? "" : r.querySelector(".p-name").value.trim().replace(/\s+/g, " "),
+    cpu: r.querySelector(".p-cpu").checked,
+    character: r.querySelector(".p-char").value,
+    place: r.querySelector(".p-place").selectedIndex + 1,
+    stars: Math.max(0, Math.min(99, parseInt(r.querySelector(".p-stars").value, 10) || 0)),
+    coins: Math.max(0, Math.min(999, parseInt(r.querySelector(".p-coins").value, 10) || 0))
+  }));
+  if (players.some(p => !p.cpu && !p.name)) throw new Error("Every non-CPU player needs a name.");
+  if (!players.some(p => !p.cpu)) throw new Error("At least one player must be a person.");
+  const keys = players.filter(p => !p.cpu).map(p => keyOf(p.name));
+  if (new Set(keys).size !== keys.length) throw new Error("The same name is in the game twice.");
+  if (!players.some(p => p.place === 1)) throw new Error("Someone has to finish 1st.");
+  return { date, board, mode: $("gMode").value, turns: Number($("gTurns").value), players };
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  let game;
+  try { game = readForm(); } catch (e) { setMsg(e.message, true); return; }
+  $("saveBtn").disabled = true;
+  setMsg("Saving...");
+  try {
+    await store.add(game, photoData);
+    // Keep names and characters for the next game of the night, reset the rest.
+    const keep = [...$("playerRows").children].map(r => ({ name: r.querySelector(".p-name").value, cpu: r.querySelector(".p-cpu").checked, char: r.querySelector(".p-char").value }));
+    resetForm();
+    while ($("playerRows").children.length < keep.length) $("playerRows").appendChild(playerRow());
+    [...$("playerRows").children].forEach((r, i) => {
+      r.querySelector(".p-name").value = keep[i].name;
+      r.querySelector(".p-cpu").checked = keep[i].cpu;
+      r.querySelector(".p-name").disabled = keep[i].cpu;
+      r.querySelector(".p-char").value = keep[i].char;
+    });
+    renumber();
+    setMsg("Saved. Names and characters are kept for the next game.");
+  } catch (e) {
+    setMsg("Save failed: " + e.message, true);
+  } finally {
+    $("saveBtn").disabled = false;
+  }
+});
+
+$("addRowBtn").addEventListener("click", () => {
+  if ($("playerRows").children.length < MAX_PLAYERS) { $("playerRows").appendChild(playerRow()); renumber(); }
+});
+$("gBoard").addEventListener("change", () => $("otherBoardWrap").classList.toggle("hidden", $("gBoard").value !== "Other"));
+$("h2hPlayer").addEventListener("change", renderH2H);
+
+/* ---------- History actions ---------- */
+$("historyList").addEventListener("click", async e => {
+  const photoId = e.target.dataset.photo, delId = e.target.dataset.del;
+  if (photoId) {
+    const data = await store.photo(photoId).catch(() => null);
+    if (!data) { alert("Photo not found."); return; }
+    $("dialogImg").src = data;
+    $("photoDialog").showModal();
+  }
+  if (delId) {
+    const g = allGames.find(x => x.id === delId);
+    if (g && confirm(`Delete the ${g.board} game from ${g.date}? This cannot be undone.`)) {
+      try { await store.remove(g); } catch (err) { alert("Delete failed: " + err.message); }
+    }
+  }
+});
+$("closeDialog").addEventListener("click", () => $("photoDialog").close());
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tabs button").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b === btn));
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + btn.dataset.tab));
+}));
+
+/* ---------- Start ---------- */
+fillSelect($("gBoard"), BOARDS);
+fillSelect($("gMode"), MODES);
+$("gDate").value = today();
+resetForm();
+store.subscribe(games => { allGames = games; render(); });
+</script>
+</body>
+</html>
