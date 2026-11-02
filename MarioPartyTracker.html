@@ -37,6 +37,7 @@
   main { max-width: 860px; margin: 0 auto; padding: 1rem; }
   .banner { background: #fff3b0; color: #4a3b00; border: 1px solid var(--gold); border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 1rem; font-size: 0.92rem; }
   .banner.error { background: #ffd9d6; color: #6b0f0a; border-color: var(--red); }
+  .banner ol { margin: 0.4rem 0 0; padding-left: 1.2rem; }
   .tabs { display: flex; gap: 0.35rem; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 2px; }
   .tabs button {
     flex: 0 0 auto; border: 2px solid var(--line); background: var(--card); color: var(--ink);
@@ -56,6 +57,8 @@
   input:focus, select:focus { outline: none; border-color: var(--blue); }
   input[type="checkbox"] { width: auto; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .filters > div { flex: 1 1 180px; max-width: 260px; }
   .photo-box { border: 2px dashed var(--line); border-radius: 10px; padding: 0.75rem; text-align: center; margin-bottom: 1rem; }
   .photo-box img { max-width: 100%; max-height: 360px; border-radius: 8px; display: block; margin: 0.6rem auto 0; }
   .player {
@@ -85,6 +88,7 @@
   th { color: var(--muted); font-weight: normal; font-size: 0.82rem; }
   td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
   tr.unranked td { color: var(--muted); }
+  tr.group-start td { border-top: 2px solid var(--muted); }
   .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--blue); vertical-align: middle; margin-right: 0.4rem; }
   .stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
   .tile { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem; }
@@ -104,6 +108,7 @@
   dialog img { max-width: 90vw; max-height: 80vh; display: block; border-radius: 8px; }
   dialog::backdrop { background: rgba(0,0,0,0.7); }
   .note { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+  code { font-size: 0.85em; background: rgba(0,0,0,0.06); padding: 0 0.25rem; border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -117,6 +122,7 @@
 
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="add" aria-selected="true">Add game</button>
+    <button role="tab" data-tab="rankings" aria-selected="false">Rankings</button>
     <button role="tab" data-tab="players" aria-selected="false">Players</button>
     <button role="tab" data-tab="h2h" aria-selected="false">Head to head</button>
     <button role="tab" data-tab="characters" aria-selected="false">Characters</button>
@@ -140,9 +146,6 @@
       <div><label for="gMode">Mode</label><select id="gMode"></select></div>
       <div><label for="gTurns">Turns</label><select id="gTurns"><option>10</option><option selected>20</option><option>30</option></select></div>
     </div>
-    <div id="otherBoardWrap" class="hidden" style="margin-top:0.75rem">
-      <label for="gBoardOther">Board name</label><input id="gBoardOther" maxlength="60">
-    </div>
 
     <h3>Players</h3>
     <div id="playerRows"></div>
@@ -153,7 +156,23 @@
       <button class="primary" id="saveBtn" type="button">Save game</button>
       <span id="saveMsg" class="msg"></span>
     </div>
-    <p class="note">Tick CPU for computer players. They take up a place but are left out of player and character stats. Tied players share a place, and a tie for 1st gives each of them a win.</p>
+    <p class="note">Tick CPU for computer players. They take up a place but are left out of player and character stats. Tied players share a place, and a tie for 1st gives each of them a win. In Partner Party, give both winning teammates 1st.</p>
+  </section>
+
+  <!-- RANKINGS: reads the player_character_stats view -->
+  <section id="tab-rankings" class="card hidden">
+    <h2>Rankings by win ratio</h2>
+    <div class="filters">
+      <div><label for="rankBy">Rank</label>
+        <select id="rankBy">
+          <option value="player">Each player's best characters</option>
+          <option value="character">Best player for each character</option>
+          <option value="overall">Best player + character combos</option>
+        </select></div>
+      <div><label for="rankFilter" id="rankFilterLabel">Player</label><select id="rankFilter"></select></div>
+    </div>
+    <div class="table-wrap"><table id="rankTable"></table></div>
+    <p class="note" id="rankNote"></p>
   </section>
 
   <!-- PLAYERS -->
@@ -180,7 +199,7 @@
   <section id="tab-characters" class="card hidden">
     <h2>Characters</h2>
     <div class="table-wrap"><table id="charTable"></table></div>
-    <p class="note">Human players only.</p>
+    <p class="note">Human players only. Characters need 3 picks to be ranked.</p>
   </section>
 
   <!-- BOARDS -->
@@ -203,288 +222,213 @@
 
 <script type="module">
 /* =====================================================================
-   1. PASTE YOUR FIREBASE WEB CONFIG HERE
-   Firebase console > Project settings > General > Your apps > Web app > Config.
-   Until you do, the page runs in demo mode and saves only to this browser.
+   1. PASTE YOUR SUPABASE PROJECT DETAILS HERE
+   Supabase dashboard > Project Settings > API (or "API Keys").
+   Use the Project URL and the publishable / anon public key.
+   Never paste the secret / service_role key: it bypasses all security.
    ===================================================================== */
-const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
-};
+const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL";
+const SUPABASE_KEY = "PASTE_YOUR_PUBLISHABLE_OR_ANON_KEY";
 
-/* ---------- Game data: Super Mario Party Jamboree ---------- */
-const CHARACTERS = [
-  "Mario", "Luigi", "Peach", "Daisy", "Wario", "Waluigi", "Yoshi", "Birdo",
-  "Rosalina", "Donkey Kong", "Toad", "Toadette", "Boo", "Shy Guy", "Bowser",
-  "Bowser Jr.", "Goomba", "Koopa Troopa", "Monty Mole", "Pauline", "Ninji", "Spike"
-];
-const BOARDS = [
-  "Mega Wiggler's Tree Party", "Rainbow Galleria", "Goomba Lagoon", "Roll 'em Raceway",
-  "King Bowser's Keep", "Mario's Rainbow Castle", "Western Land", "Other"
-];
-const MODES = ["Party", "Partner Party", "Other"];
+const MODES = ["Party", "Partner Party", "Other"];   // must match the CHECK on games.mode
 const MAX_PLAYERS = 8;
-const MIN_RANKED_GAMES = 3;
 
 /* ---------- Helpers ---------- */
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const keyOf = name => name.trim().toLowerCase().replace(/\s+/g, " ");
-const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "-";
-const one = (a, b) => b ? (a / b).toFixed(1) : "-";
-const millis = t => (t && typeof t.toMillis === "function") ? t.toMillis() : (typeof t === "number" ? t : 0);
+const num = v => (v === null || v === undefined) ? "-" : Number(v);
+const pctCell = v => (v === null || v === undefined) ? "-" : `<span class="bar" style="width:${Math.round(Number(v) * 0.4)}px"></span>${Number(v)}%`;
 const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 const ordinal = n => n + ({ 1: "st", 2: "nd", 3: "rd" }[n] || "th");
+const byRank = (a, b, field) => (a[field] ?? Infinity) - (b[field] ?? Infinity);
 function fillSelect(sel, items, selected) {
   sel.innerHTML = items.map(v => `<option${v === selected ? " selected" : ""}>${esc(v)}</option>`).join("");
 }
-function showBanner(text, isError) {
+function showBanner(html, isError) {
   const b = $("banner");
-  b.textContent = text;
+  b.innerHTML = html;
   b.classList.toggle("error", !!isError);
   b.classList.remove("hidden");
 }
+function emptyRow(table, text) { $(table).innerHTML = `<tr><td class="muted">${esc(text)}</td></tr>`; }
 
 /* =====================================================================
-   2. STORAGE: Firestore when configured, browser-only demo otherwise.
-   games/{id}  = { date, board, mode, turns, players[], hasPhoto, createdAt }
-   photos/{id} = { data }   (photo kept in its own doc so the game list stays small)
+   2. DATA ACCESS: Supabase REST (PostgREST). Each view in
+   supabase/schema.sql is one GET; saving is one call to add_game().
    ===================================================================== */
-const configured = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE");
-let store;
+const configured = /^https?:\/\//.test(SUPABASE_URL) && !SUPABASE_KEY.startsWith("PASTE");
+const headers = { apikey: SUPABASE_KEY, "Content-Type": "application/json" };
+// Legacy anon keys are JWTs and also go in Authorization. New sb_publishable_ keys only use apikey.
+if (!SUPABASE_KEY.startsWith("sb_")) headers.Authorization = "Bearer " + SUPABASE_KEY;
 
-if (configured) {
-  const V = "10.12.2";
-  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
-  const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
-  const db = fs.getFirestore(initializeApp(firebaseConfig));
-  store = {
-    subscribe(cb) {
-      fs.onSnapshot(fs.collection(db, "games"),
-        snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-        err => showBanner("Could not load games from Firebase: " + err.message, true));
-    },
-    async add(game, photo) {
-      const ref = fs.doc(fs.collection(db, "games"));
-      if (photo) await fs.setDoc(fs.doc(db, "photos", ref.id), { data: photo });
-      await fs.setDoc(ref, { ...game, hasPhoto: !!photo, createdAt: fs.serverTimestamp() });
-    },
-    async remove(game) {
-      await fs.deleteDoc(fs.doc(db, "games", game.id));
-      if (game.hasPhoto) await fs.deleteDoc(fs.doc(db, "photos", game.id));
-    },
-    async photo(id) {
-      const snap = await fs.getDoc(fs.doc(db, "photos", id));
-      return snap.exists() ? snap.data().data : null;
-    }
-  };
-} else {
-  showBanner("Demo mode: games are saved only in this browser. Paste your Firebase config into MarioPartyTracker.html to share results across devices.");
-  const read = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
-  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
-  let listener = () => {};
-  const emit = () => listener(Object.entries(read("mpGames")).map(([id, g]) => ({ id, ...g })));
-  store = {
-    subscribe(cb) { listener = cb; emit(); },
-    async add(game, photo) {
-      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-      const games = read("mpGames");
-      games[id] = { ...game, hasPhoto: false, createdAt: Date.now() };
-      if (photo) {
-        const photos = read("mpPhotos");
-        photos[id] = photo;
-        games[id].hasPhoto = write("mpPhotos", photos);  // browser storage can fill up; keep the game anyway
-      }
-      if (!write("mpGames", games)) throw new Error("Browser storage is full or blocked.");
-      emit();
-    },
-    async remove(game) {
-      const games = read("mpGames"); delete games[game.id]; write("mpGames", games);
-      const photos = read("mpPhotos"); delete photos[game.id]; write("mpPhotos", photos);
-      emit();
-    },
-    async photo(id) { return read("mpPhotos")[id] || null; }
-  };
-}
-
-/* =====================================================================
-   3. STATS. This is the "GROUP BY" layer, done in the browser.
-   ===================================================================== */
-function computeStats(games) {
-  const people = new Map(), chars = new Map(), boards = new Map(), pairs = new Map();
-  const get = (map, key, init) => { if (!map.has(key)) map.set(key, init()); return map.get(key); };
-
-  for (const g of games) {
-    const players = g.players || [];
-    const n = players.length || 1;
-    const teamGame = g.mode === "Partner Party";
-    const winChance = teamGame ? 0.5 : 1 / n;  // what luck alone would give
-    const humans = players.filter(p => !p.cpu && p.name);
-    const winners = players.filter(p => p.place === 1);
-
-    const b = get(boards, g.board || "Unknown", () => ({ name: g.board || "Unknown", games: 0, winners: new Map(), stars: 0, slots: 0 }));
-    b.games++;
-    for (const w of winners) {
-      const label = w.cpu ? "CPU" : w.name.trim();
-      const k = w.cpu ? "cpu" : keyOf(w.name);
-      const e = get(b.winners, k, () => ({ name: label, wins: 0 }));
-      e.wins++;
-    }
-
-    for (const p of humans) {
-      const k = keyOf(p.name);
-      const s = get(people, k, () => ({ name: p.name.trim(), games: 0, wins: 0, expected: 0, stars: 0, coins: 0, placeSum: 0, chars: new Map(), boardWins: new Map() }));
-      const win = p.place === 1;
-      s.games++; s.wins += win ? 1 : 0; s.expected += winChance;
-      s.stars += p.stars || 0; s.coins += p.coins || 0; s.placeSum += p.place || 0;
-      s.chars.set(p.character, (s.chars.get(p.character) || 0) + 1);
-      if (win) s.boardWins.set(g.board, (s.boardWins.get(g.board) || 0) + 1);
-      b.stars += p.stars || 0; b.slots++;
-
-      const c = get(chars, p.character || "Unknown", () => ({ name: p.character || "Unknown", picks: 0, wins: 0, stars: 0, players: new Map() }));
-      c.picks++; c.wins += win ? 1 : 0; c.stars += p.stars || 0;
-      c.players.set(s.name, (c.players.get(s.name) || 0) + 1);
-    }
-
-    // Head to head: every pair of humans in this game.
-    for (let i = 0; i < humans.length; i++) {
-      for (let j = i + 1; j < humans.length; j++) {
-        let a = humans[i], c = humans[j];
-        if (keyOf(a.name) > keyOf(c.name)) [a, c] = [c, a];
-        const pk = keyOf(a.name) + "|" + keyOf(c.name);
-        const r = get(pairs, pk, () => ({ a: keyOf(a.name), b: keyOf(c.name), games: 0, aAhead: 0, bAhead: 0, ties: 0 }));
-        r.games++;
-        if (a.place < c.place) r.aAhead++; else if (c.place < a.place) r.bAhead++; else r.ties++;
-      }
-    }
+async function api(path, options = {}) {
+  const res = await fetch(SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/" + path, { ...options, headers: { ...headers, ...options.headers } });
+  if (!res.ok) {
+    let msg = res.status + " " + res.statusText;
+    try { const body = await res.json(); msg = body.message || body.hint || msg; } catch (e) { /* not JSON */ }
+    throw new Error(msg);
   }
-  return { people, chars, boards, pairs };
+  return res.status === 204 ? null : res.json();
 }
-const topOf = map => { let best = null, n = 0; for (const [k, v] of map) if (v > n) { best = k; n = v; } return best ? { name: best, n } : null; };
+const view = name => api(name + "?select=*");
 
 /* =====================================================================
-   4. RENDERING
+   3. RENDERING. The math lives in the SQL views; this just draws tables.
    ===================================================================== */
-let allGames = [];
-let stats = computeStats([]);
+let data = { players: [], chars: [], combos: [], h2h: [], boards: [], history: [] };
 
-function render() {
-  allGames.sort((x, y) => (y.date || "").localeCompare(x.date || "") || millis(y.createdAt) - millis(x.createdAt));
-  stats = computeStats(allGames);
-  renderNameList();
+async function refresh() {
+  try {
+    const [players, chars, combos, h2h, boards, history] = await Promise.all([
+      view("player_stats"), view("character_stats"), view("player_character_stats"),
+      view("head_to_head"), view("board_stats"), view("game_history")
+    ]);
+    data = { players, chars, combos, h2h, boards, history };
+    renderAll();
+  } catch (e) {
+    showBanner("Could not load stats from Supabase: " + esc(e.message) + ". Check the URL and key, and that supabase/schema.sql has been run.", true);
+  }
+}
+
+function renderAll() {
+  data.players.sort((a, b) => byRank(a, b, "rank") || b.games - a.games);
+  data.history.sort((a, b) => b.played_on.localeCompare(a.played_on) || b.created_at.localeCompare(a.created_at));
+  $("nameList").innerHTML = data.players.map(p => `<option value="${esc(p.player)}">`).join("");
   renderPlayers();
+  renderRankFilter();
+  renderRankings();
   renderH2H();
   renderChars();
   renderBoards();
   renderHistory();
 }
 
-function renderNameList() {
-  $("nameList").innerHTML = [...stats.people.values()].map(p => `<option value="${esc(p.name)}">`).join("");
-}
-
 function renderPlayers() {
-  const list = [...stats.people.values()].map(p => ({ ...p, rate: p.wins / p.games }));
-  list.sort((a, b) =>
-    (b.games >= MIN_RANKED_GAMES) - (a.games >= MIN_RANKED_GAMES) || b.rate - a.rate || b.wins - a.wins || b.stars - a.stars);
-
-  const totalStars = list.reduce((s, p) => s + p.stars, 0);
-  const champ = list.find(p => p.games >= MIN_RANKED_GAMES);
+  const list = data.players;
+  const champ = list.find(p => p.rank === 1);
   const starKing = [...list].sort((a, b) => b.stars - a.stars)[0];
   $("tiles").innerHTML = [
-    ["Games logged", allGames.length],
-    ["Stars collected", totalStars],
-    ["Best win %", champ ? `${esc(champ.name)} ${pct(champ.wins, champ.games)}` : "-"],
-    ["Most stars", starKing ? `${esc(starKing.name)} ${starKing.stars}` : "-"]
+    ["Games logged", data.history.length],
+    ["Stars collected", list.reduce((s, p) => s + p.stars, 0)],
+    ["Best win %", champ ? `${esc(champ.player)} ${num(champ.win_pct)}%` : "-"],
+    ["Most stars", starKing ? `${esc(starKing.player)} ${starKing.stars}` : "-"]
   ].map(([k, v]) => `<div class="tile"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
 
-  if (!list.length) { $("playersTable").innerHTML = `<tr><td class="muted">No games yet. Add one on the first tab.</td></tr>`; return; }
+  if (!list.length) return emptyRow("playersTable", "No games yet. Add one on the first tab.");
   $("playersTable").innerHTML =
     `<thead><tr><th>#</th><th>Player</th><th class="n">Games</th><th class="n">Wins</th><th class="n">Win %</th><th class="n">vs. luck</th>
      <th class="n">Stars</th><th class="n">Stars/game</th><th class="n">Avg place</th><th>Main</th><th>Best board</th></tr></thead><tbody>` +
-    list.map((p, i) => {
-      const ranked = p.games >= MIN_RANKED_GAMES;
-      const main = topOf(p.chars), board = topOf(p.boardWins);
-      return `<tr class="${ranked ? "" : "unranked"}">
-        <td>${ranked ? i + 1 : "-"}</td><td><b>${esc(p.name)}</b></td>
-        <td class="n">${p.games}</td><td class="n">${p.wins}</td>
-        <td class="n"><span class="bar" style="width:${Math.round(p.rate * 40)}px"></span>${pct(p.wins, p.games)}</td>
-        <td class="n">${p.expected ? (p.wins / p.expected).toFixed(2) + "x" : "-"}</td>
-        <td class="n">${p.stars}</td><td class="n">${one(p.stars, p.games)}</td><td class="n">${one(p.placeSum, p.games)}</td>
-        <td>${main ? esc(main.name) : "-"}</td><td>${board ? esc(board.name) + " (" + board.n + ")" : "-"}</td></tr>`;
+    list.map(p => `<tr class="${p.rank ? "" : "unranked"}">
+      <td>${p.rank ?? "-"}</td><td><b>${esc(p.player)}</b></td>
+      <td class="n">${p.games}</td><td class="n">${p.wins}</td><td class="n">${pctCell(p.win_pct)}</td>
+      <td class="n">${p.vs_luck === null ? "-" : Number(p.vs_luck).toFixed(2) + "x"}</td>
+      <td class="n">${p.stars}</td><td class="n">${num(p.stars_per_game)}</td><td class="n">${num(p.avg_place)}</td>
+      <td>${esc(p.main_character || "-")}</td><td>${p.best_board ? esc(p.best_board) + " (" + p.best_board_wins + ")" : "-"}</td></tr>`).join("") +
+    "</tbody>";
+}
+
+/* ----- Rankings tab: one view, three window-function ranks ----- */
+function renderRankFilter() {
+  const mode = $("rankBy").value;
+  const sel = $("rankFilter");
+  const wrap = sel.parentElement;
+  wrap.classList.toggle("hidden", mode === "overall");
+  const field = mode === "character" ? "character" : "player";
+  $("rankFilterLabel").textContent = mode === "character" ? "Character" : "Player";
+  const current = sel.value;
+  const options = [...new Set(data.combos.map(c => c[field]))].sort((a, b) => a.localeCompare(b));
+  sel.innerHTML = `<option value="">All</option>` + options.map(o => `<option>${esc(o)}</option>`).join("");
+  if (options.includes(current)) sel.value = current;
+}
+
+function renderRankings() {
+  const mode = $("rankBy").value;
+  const filter = $("rankFilter").value;
+  let rows = data.combos;
+  if (!rows.length) { $("rankNote").textContent = ""; return emptyRow("rankTable", "No games yet."); }
+
+  const stats = r => `<td class="n">${r.games}</td><td class="n">${r.wins}</td><td class="n">${pctCell(r.win_pct)}</td>
+    <td class="n">${num(r.stars_per_game)}</td><td class="n">${num(r.avg_place)}</td>`;
+  const statHead = `<th class="n">Games</th><th class="n">Wins</th><th class="n">Win %</th><th class="n">Stars/game</th><th class="n">Avg place</th>`;
+
+  if (mode === "overall") {
+    rows = [...rows].sort((a, b) => byRank(a, b, "rank_overall") || b.win_pct - a.win_pct || b.games - a.games);
+    $("rankTable").innerHTML = `<thead><tr><th>#</th><th>Player</th><th>Character</th>${statHead}</tr></thead><tbody>` +
+      rows.map(r => `<tr class="${r.rank_overall ? "" : "unranked"}"><td>${r.rank_overall ?? "-"}</td><td><b>${esc(r.player)}</b></td><td>${esc(r.character)}</td>${stats(r)}</tr>`).join("") + "</tbody>";
+    $("rankNote").textContent = "Every player and character pair ranked against each other by win ratio. Pairs need 2 games to be ranked.";
+    return;
+  }
+
+  const group = mode === "player" ? "player" : "character";
+  const other = mode === "player" ? "character" : "player";
+  const rankField = mode === "player" ? "rank_for_player" : "rank_for_character";
+  if (filter) rows = rows.filter(r => r[group] === filter);
+  rows = [...rows].sort((a, b) => a[group].localeCompare(b[group]) || a[rankField] - b[rankField] || b.games - a.games);
+  let last = null;
+  $("rankTable").innerHTML =
+    `<thead><tr><th>${mode === "player" ? "Player" : "Character"}</th><th>#</th><th>${mode === "player" ? "Character" : "Player"}</th>${statHead}</tr></thead><tbody>` +
+    rows.map(r => {
+      const first = r[group] !== last; last = r[group];
+      return `<tr class="${first ? "group-start" : ""}"><td><b>${first ? esc(r[group]) : ""}</b></td><td>${r[rankField]}</td><td>${esc(r[other])}</td>${stats(r)}</tr>`;
     }).join("") + "</tbody>";
+  $("rankNote").textContent = mode === "player"
+    ? "Within each player, characters ranked by win ratio, then wins. #1 is that player's best pick."
+    : "Within each character, players ranked by win ratio, then wins. #1 is the best player of that character.";
 }
 
 function renderH2H() {
   const sel = $("h2hPlayer");
-  const names = [...stats.people.entries()].sort((a, b) => b[1].games - a[1].games);
   const current = sel.value;
-  sel.innerHTML = names.map(([k, p]) => `<option value="${esc(k)}">${esc(p.name)}</option>`).join("");
-  if (names.some(([k]) => k === current)) sel.value = current;
+  sel.innerHTML = data.players.map(p => `<option value="${esc(p.player_key)}">${esc(p.player)}</option>`).join("");
+  if (data.players.some(p => p.player_key === current)) sel.value = current;
   const me = sel.value;
-  if (!me) { $("h2hTable").innerHTML = `<tr><td class="muted">No games yet.</td></tr>`; return; }
-
-  const rows = [];
-  for (const r of stats.pairs.values()) {
-    if (r.a !== me && r.b !== me) continue;
-    const meIsA = r.a === me;
-    const other = stats.people.get(meIsA ? r.b : r.a);
-    const ahead = meIsA ? r.aAhead : r.bAhead, behind = meIsA ? r.bAhead : r.aAhead;
-    rows.push({ name: other.name, games: r.games, ahead, behind, ties: r.ties });
-  }
-  rows.sort((a, b) => b.games - a.games);
-  if (!rows.length) { $("h2hTable").innerHTML = `<tr><td class="muted">${esc(stats.people.get(me).name)} has not played with anyone else yet.</td></tr>`; return; }
+  if (!me) return emptyRow("h2hTable", "No games yet.");
+  const rows = data.h2h.filter(r => r.player_key === me).sort((a, b) => b.games - a.games);
+  if (!rows.length) return emptyRow("h2hTable", "This player has not played with anyone else yet.");
   $("h2hTable").innerHTML =
     `<thead><tr><th>Opponent</th><th class="n">Games together</th><th class="n">Finished ahead</th><th class="n">Finished behind</th><th class="n">Tied</th><th class="n">Ahead %</th></tr></thead><tbody>` +
-    rows.map(r => `<tr><td><b>${esc(r.name)}</b></td><td class="n">${r.games}</td><td class="n">${r.ahead}</td><td class="n">${r.behind}</td><td class="n">${r.ties}</td><td class="n">${pct(r.ahead, r.games)}</td></tr>`).join("") +
+    rows.map(r => `<tr><td><b>${esc(r.opponent)}</b></td><td class="n">${r.games}</td><td class="n">${r.ahead}</td><td class="n">${r.behind}</td><td class="n">${r.ties}</td><td class="n">${pctCell(r.ahead_pct)}</td></tr>`).join("") +
     "</tbody>";
 }
 
 function renderChars() {
-  const list = [...stats.chars.values()].sort((a, b) => b.wins - a.wins || b.wins / b.picks - a.wins / a.picks || b.picks - a.picks);
-  if (!list.length) { $("charTable").innerHTML = `<tr><td class="muted">No games yet.</td></tr>`; return; }
+  const list = [...data.chars].sort((a, b) => byRank(a, b, "rank") || b.picks - a.picks || a.character.localeCompare(b.character));
+  if (!list.length) return emptyRow("charTable", "No characters loaded.");
   $("charTable").innerHTML =
-    `<thead><tr><th>Character</th><th class="n">Picks</th><th class="n">Wins</th><th class="n">Win %</th><th class="n">Stars/game</th><th>Played most by</th></tr></thead><tbody>` +
-    list.map(c => { const by = topOf(c.players); return `<tr><td><b>${esc(c.name)}</b></td><td class="n">${c.picks}</td><td class="n">${c.wins}</td>
-      <td class="n">${pct(c.wins, c.picks)}</td><td class="n">${one(c.stars, c.picks)}</td><td>${by ? esc(by.name) : "-"}</td></tr>`; }).join("") +
+    `<thead><tr><th>#</th><th>Character</th><th class="n">Picks</th><th class="n">Wins</th><th class="n">Win %</th><th class="n">Stars/game</th><th>Played most by</th></tr></thead><tbody>` +
+    list.map(c => `<tr class="${c.rank ? "" : "unranked"}"><td>${c.rank ?? "-"}</td><td><b>${esc(c.character)}</b></td><td class="n">${c.picks}</td><td class="n">${c.wins}</td>
+      <td class="n">${pctCell(c.win_pct)}</td><td class="n">${num(c.stars_per_game)}</td><td>${c.top_player ? esc(c.top_player) + " (" + c.top_player_picks + ")" : "-"}</td></tr>`).join("") +
     "</tbody>";
 }
 
 function renderBoards() {
-  const list = [...stats.boards.values()].sort((a, b) => b.games - a.games);
-  if (!list.length) { $("boardTable").innerHTML = `<tr><td class="muted">No games yet.</td></tr>`; return; }
+  const list = [...data.boards].sort((a, b) => b.games - a.games || a.sort_order - b.sort_order);
+  if (!list.length) return emptyRow("boardTable", "No boards loaded.");
   $("boardTable").innerHTML =
     `<thead><tr><th>Board</th><th class="n">Games</th><th>Top winner</th><th class="n">Avg stars per player</th></tr></thead><tbody>` +
-    list.map(b => {
-      let top = null; for (const w of b.winners.values()) if (!top || w.wins > top.wins) top = w;
-      return `<tr><td><b>${esc(b.name)}</b></td><td class="n">${b.games}</td><td>${top ? esc(top.name) + " (" + top.wins + ")" : "-"}</td><td class="n">${one(b.stars, b.slots)}</td></tr>`;
-    }).join("") + "</tbody>";
+    list.map(b => `<tr><td><b>${esc(b.board)}</b></td><td class="n">${b.games}</td><td>${b.top_winner ? esc(b.top_winner) + " (" + b.top_winner_wins + ")" : "-"}</td><td class="n">${num(b.stars_per_player)}</td></tr>`).join("") +
+    "</tbody>";
 }
 
 function renderHistory() {
   const box = $("historyList");
-  if (!allGames.length) { box.innerHTML = `<p class="muted">No games yet.</p>`; return; }
-  box.innerHTML = allGames.map(g => {
-    const players = [...(g.players || [])].sort((a, b) => a.place - b.place);
-    return `<div class="game">
+  if (!data.history.length) { box.innerHTML = `<p class="muted">No games yet.</p>`; return; }
+  box.innerHTML = data.history.map(g => `<div class="game">
       <div class="game-head">
-        <span><b>${esc(g.board)}</b> <span class="muted">${esc(g.date)} &middot; ${esc(g.mode)} &middot; ${esc(g.turns)} turns</span></span>
-        <span>${g.hasPhoto ? `<button class="link-btn" data-photo="${esc(g.id)}">View photo</button>` : ""}
+        <span><b>${esc(g.board)}</b> <span class="muted">${esc(g.played_on)} &middot; ${esc(g.mode)} &middot; ${esc(g.turns)} turns</span></span>
+        <span>${g.has_photo ? `<button class="link-btn" data-photo="${esc(g.id)}">View photo</button>` : ""}
           <button class="link-btn danger" data-del="${esc(g.id)}">Delete</button></span>
       </div>
-      <div class="places">${players.map(p =>
+      <div class="places">${(g.players || []).map(p =>
         `<span class="pill ${p.place === 1 ? "first" : ""} ${p.cpu ? "cpu" : ""}">${ordinal(p.place)} ${esc(p.cpu ? "CPU" : p.name)} (${esc(p.character)}) &#9733;${esc(p.stars)}</span>`).join("")}
-      </div></div>`;
-  }).join("");
+      </div></div>`).join("");
 }
 
 /* =====================================================================
-   5. ADD GAME FORM
+   4. ADD GAME FORM
    ===================================================================== */
+let CHARACTERS = [];
 let photoData = null;
 
 function playerRow() {
@@ -500,12 +444,13 @@ function playerRow() {
     <div><label>Coins</label><input class="p-coins" type="number" inputmode="numeric" min="0" max="999" value="0"></div>
     <button type="button" class="icon-btn" title="Remove player" aria-label="Remove player">&times;</button>`;
   fillSelect(div.querySelector(".p-char"), CHARACTERS);
-  div.querySelector(".p-cpu").addEventListener("change", e => {
+  const cpu = div.querySelector(".p-cpu");
+  cpu.addEventListener("change", () => {
     const name = div.querySelector(".p-name");
-    name.disabled = e.target.checked;
-    if (e.target.checked) name.value = "";
+    name.disabled = cpu.checked;
+    if (cpu.checked) name.value = "";
   });
-  div.querySelector(".p-cpu + label").addEventListener("click", () => div.querySelector(".p-cpu").click());
+  div.querySelector(".p-cpu + label").addEventListener("click", () => cpu.click());
   div.querySelector(".icon-btn").addEventListener("click", () => {
     if ($("playerRows").children.length > 2) { div.remove(); renumber(); }
   });
@@ -531,19 +476,19 @@ function resetForm() {
   photoData = null;
 }
 
-// Shrink the photo so it fits in one Firestore document (1 MB limit).
+// Shrink the photo so it fits the 900 KB check on game_photos.data.
 async function compressPhoto(file) {
   const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
-  let max = 1100, quality = 0.7, data;
+  let max = 1100, quality = 0.7, out;
   do {
     const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
     const c = document.createElement("canvas");
     c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
     c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-    data = c.toDataURL("image/jpeg", quality);
+    out = c.toDataURL("image/jpeg", quality);
     max *= 0.8; quality = Math.max(0.4, quality - 0.1);
-  } while (data.length > 700000 && max > 300);
-  return data;
+  } while (out.length > 700000 && max > 300);
+  return out;
 }
 
 $("photoInput").addEventListener("change", async e => {
@@ -565,13 +510,12 @@ function setMsg(text, isErr) {
   m.className = "msg " + (isErr ? "err" : "ok");
 }
 
+// Quick checks for instant feedback. add_game() in the database repeats them, so they cannot be skipped.
 function readForm() {
-  const board = $("gBoard").value === "Other" ? $("gBoardOther").value.trim() : $("gBoard").value;
-  if (!board) throw new Error("Enter the board name.");
-  const date = $("gDate").value;
-  if (!date) throw new Error("Pick a date.");
+  const played_on = $("gDate").value;
+  if (!played_on) throw new Error("Pick a date.");
   const players = [...$("playerRows").children].map(r => ({
-    name: r.querySelector(".p-cpu").checked ? "" : r.querySelector(".p-name").value.trim().replace(/\s+/g, " "),
+    name: r.querySelector(".p-cpu").checked ? null : r.querySelector(".p-name").value.trim().replace(/\s+/g, " "),
     cpu: r.querySelector(".p-cpu").checked,
     character: r.querySelector(".p-char").value,
     place: r.querySelector(".p-place").selectedIndex + 1,
@@ -583,7 +527,7 @@ function readForm() {
   const keys = players.filter(p => !p.cpu).map(p => keyOf(p.name));
   if (new Set(keys).size !== keys.length) throw new Error("The same name is in the game twice.");
   if (!players.some(p => p.place === 1)) throw new Error("Someone has to finish 1st.");
-  return { date, board, mode: $("gMode").value, turns: Number($("gTurns").value), players };
+  return { played_on, board: $("gBoard").value, mode: $("gMode").value, turns: Number($("gTurns").value), players };
 }
 
 $("saveBtn").addEventListener("click", async () => {
@@ -592,7 +536,7 @@ $("saveBtn").addEventListener("click", async () => {
   $("saveBtn").disabled = true;
   setMsg("Saving...");
   try {
-    await store.add(game, photoData);
+    await api("rpc/add_game", { method: "POST", body: JSON.stringify({ p_game: game, p_photo: photoData }) });
     // Keep names and characters for the next game of the night, reset the rest.
     const keep = [...$("playerRows").children].map(r => ({ name: r.querySelector(".p-name").value, cpu: r.querySelector(".p-cpu").checked, char: r.querySelector(".p-char").value }));
     resetForm();
@@ -605,6 +549,7 @@ $("saveBtn").addEventListener("click", async () => {
     });
     renumber();
     setMsg("Saved. Names and characters are kept for the next game.");
+    await refresh();
   } catch (e) {
     setMsg("Save failed: " + e.message, true);
   } finally {
@@ -615,22 +560,26 @@ $("saveBtn").addEventListener("click", async () => {
 $("addRowBtn").addEventListener("click", () => {
   if ($("playerRows").children.length < MAX_PLAYERS) { $("playerRows").appendChild(playerRow()); renumber(); }
 });
-$("gBoard").addEventListener("change", () => $("otherBoardWrap").classList.toggle("hidden", $("gBoard").value !== "Other"));
 $("h2hPlayer").addEventListener("change", renderH2H);
+$("rankBy").addEventListener("change", () => { $("rankFilter").value = ""; renderRankFilter(); renderRankings(); });
+$("rankFilter").addEventListener("change", renderRankings);
 
 /* ---------- History actions ---------- */
 $("historyList").addEventListener("click", async e => {
   const photoId = e.target.dataset.photo, delId = e.target.dataset.del;
   if (photoId) {
-    const data = await store.photo(photoId).catch(() => null);
-    if (!data) { alert("Photo not found."); return; }
-    $("dialogImg").src = data;
-    $("photoDialog").showModal();
+    try {
+      const rows = await api("game_photos?select=data&game_id=eq." + encodeURIComponent(photoId));
+      if (!rows.length) throw new Error("Photo not found.");
+      $("dialogImg").src = rows[0].data;
+      $("photoDialog").showModal();
+    } catch (err) { alert(err.message); }
   }
   if (delId) {
-    const g = allGames.find(x => x.id === delId);
-    if (g && confirm(`Delete the ${g.board} game from ${g.date}? This cannot be undone.`)) {
-      try { await store.remove(g); } catch (err) { alert("Delete failed: " + err.message); }
+    const g = data.history.find(x => String(x.id) === delId);
+    if (g && confirm(`Delete the ${g.board} game from ${g.played_on}? This cannot be undone.`)) {
+      try { await api("games?id=eq." + encodeURIComponent(delId), { method: "DELETE" }); await refresh(); }
+      catch (err) { alert("Delete failed: " + err.message); }
     }
   }
 });
@@ -641,13 +590,33 @@ document.querySelectorAll(".tabs button").forEach(btn => btn.addEventListener("c
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b === btn));
   document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + btn.dataset.tab));
 }));
+// Pick up games other people logged when you come back to the page.
+document.addEventListener("visibilitychange", () => { if (!document.hidden && configured) refresh(); });
 
 /* ---------- Start ---------- */
-fillSelect($("gBoard"), BOARDS);
 fillSelect($("gMode"), MODES);
 $("gDate").value = today();
-resetForm();
-store.subscribe(games => { allGames = games; render(); });
+
+if (!configured) {
+  $("saveBtn").disabled = true;
+  showBanner(`<b>Setup needed.</b> This tracker stores games in Supabase.
+    <ol><li>Create a free project at supabase.com.</li>
+    <li>Open SQL Editor, paste <code>supabase/schema.sql</code> from this repo, and click Run.</li>
+    <li>From Project Settings &gt; API, copy the Project URL and the publishable (or anon) key into the top of the script in <code>MarioPartyTracker.html</code>.</li></ol>`);
+  resetForm();
+} else {
+  try {
+    const [chars, boards] = await Promise.all([api("characters?select=name&order=name"), api("boards?select=name,sort_order&order=sort_order,name")]);
+    CHARACTERS = chars.map(c => c.name);
+    fillSelect($("gBoard"), boards.map(b => b.name));
+    resetForm();
+    await refresh();
+  } catch (e) {
+    resetForm();
+    $("saveBtn").disabled = true;
+    showBanner("Could not reach Supabase: " + esc(e.message) + ". Check the URL and key, and that supabase/schema.sql has been run.", true);
+  }
+}
 </script>
 </body>
 </html>
