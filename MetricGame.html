@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Think Metric</title>
+<style>
+  :root {
+    --bg: #f4f4f4;
+    --card: #ffffff;
+    --ink: #1d2433;
+    --muted: #5b6475;
+    --line: #d9dde5;
+    --accent: #001f3f;
+    --accent-2: #ff851b;
+    --good: #1f8a4c;
+    --ok: #b7791f;
+    --bad: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151c;
+      --card: #1c212b;
+      --ink: #e8ebf1;
+      --muted: #9aa3b5;
+      --line: #2e3542;
+      --accent: #7fdbff;
+      --accent-2: #ff9f4a;
+      --good: #4cc27f;
+      --ok: #e0a84a;
+      --bad: #ef6b5b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  header {
+    background: #001f3f;
+    color: #ff851b;
+    padding: 1rem;
+    text-align: center;
+  }
+  header h1 { margin: 0; font-size: 1.6rem; }
+  header p { margin: 0.25rem 0 0; color: #cfe8ff; font-size: 0.95rem; }
+  header a { color: #7fdbff; }
+  main { max-width: 680px; margin: 0 auto; padding: 1rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  h2 { margin-top: 0; font-size: 1.25rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0 1rem; }
+  .chip {
+    border: 2px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .chip[aria-pressed="true"] { border-color: var(--accent-2); background: rgba(255,133,27,0.12); }
+  button.primary {
+    background: var(--accent-2);
+    color: #1d1200;
+    border: none;
+    padding: 0.7rem 1.4rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button.primary:disabled { opacity: 0.5; cursor: default; }
+  button.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 2px solid var(--line);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .topbar { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: var(--muted); margin-bottom: 0.75rem; }
+  .topbar strong { color: var(--ink); }
+  .scene {
+    position: relative;
+    height: 220px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .scene .emoji { font-size: 110px; line-height: 1; position: relative; z-index: 2; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); }
+  .scene .deco { position: absolute; font-size: 28px; opacity: 0.55; z-index: 1; }
+  .scene .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 28%; z-index: 0; }
+  .badge {
+    position: absolute; top: 10px; left: 10px; z-index: 3;
+    background: rgba(0,0,0,0.55); color: #fff; font-size: 0.8rem;
+    padding: 0.2rem 0.6rem; border-radius: 999px;
+  }
+  .prompt { font-size: 1.15rem; font-weight: bold; margin: 0 0 0.25rem; }
+  .sub { color: var(--muted); margin: 0 0 1rem; font-size: 0.95rem; }
+  .guess-row { display: flex; gap: 0.5rem; align-items: stretch; flex-wrap: wrap; }
+  .input-wrap { display: flex; flex: 1 1 200px; border: 2px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); }
+  .input-wrap:focus-within { border-color: var(--accent-2); }
+  .input-wrap input { flex: 1; min-width: 0; border: none; background: transparent; color: var(--ink); font-size: 1.2rem; padding: 0.6rem 0.75rem; outline: none; }
+  .input-wrap .unit { padding: 0.6rem 0.75rem; color: var(--muted); font-weight: bold; background: var(--card); border-left: 1px solid var(--line); }
+  #signBtn { min-width: 3rem; }
+  .result { margin-top: 1rem; padding: 1rem; border-radius: 10px; border: 1px solid var(--line); }
+  .result .big { font-size: 1.3rem; font-weight: bold; margin: 0 0 0.25rem; }
+  .result p { margin: 0.3rem 0; }
+  .tip { background: rgba(127,219,255,0.15); border-left: 4px solid var(--accent); padding: 0.5rem 0.75rem; border-radius: 4px; margin-top: 0.6rem; font-size: 0.95rem; }
+  .meter { height: 10px; background: var(--line); border-radius: 999px; overflow: hidden; margin: 0.5rem 0; }
+  .meter > div { height: 100%; width: 0; transition: width 0.6s ease; }
+  .good { color: var(--good); } .ok { color: var(--ok); } .bad { color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.45rem 0.3rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: normal; }
+  td.num { text-align: right; white-space: nowrap; }
+  .cheats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; }
+  .cheats div { border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem; font-size: 0.9rem; }
+  .cheats b { display: block; margin-bottom: 0.15rem; }
+  .hidden { display: none; }
+  .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Think Metric</h1>
+  <p>Stop converting. Start guessing in meters, Celsius, and km/h. <a href="projects.html">Back to Projects</a></p>
+</header>
+
+<main>
+  <!-- START SCREEN -->
+  <section id="startScreen" class="card">
+    <h2>How it works</h2>
+    <p>You get 10 random things. Guess the value in metric. The closer you are, the more points you earn (up to 100 per round). After each guess you see the real answer, the imperial value you already know, and a rule of thumb.</p>
+    <p><b>Pick your categories:</b></p>
+    <div class="chips" id="catChips"></div>
+    <button class="primary" id="startBtn">Start game</button>
+    <p class="sub" id="bestLine" style="margin-top:0.75rem"></p>
+  </section>
+
+  <section class="card" id="cheatCard">
+    <h2>Quick anchors</h2>
+    <div class="cheats">
+      <div><b>Length</b>1 m is about 3.3 ft. A door is about 2 m tall.</div>
+      <div><b>Temperature</b>&deg;F is about &deg;C &times; 2 + 30. 20 &deg;C is room temp, 30 &deg;C is hot.</div>
+      <div><b>Speed</b>km/h is about mph &times; 1.6. 100 km/h is about 62 mph.</div>
+      <div><b>Mass</b>1 kg is about 2.2 lb. A liter of water weighs 1 kg.</div>
+      <div><b>Volume</b>1 L is a bit more than a quart. A gallon is about 3.8 L.</div>
+      <div><b>Distance</b>1 km is about 0.6 mi. A 10K race is 6.2 mi.</div>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="gameScreen" class="card hidden">
+    <div class="topbar">
+      <span>Round <strong id="roundNum">1</strong> of <strong id="roundTotal">10</strong></span>
+      <span>Score <strong id="scoreNum">0</strong></span>
+    </div>
+    <div class="scene" id="scene"></div>
+    <p class="prompt" id="prompt"></p>
+    <p class="sub" id="subPrompt"></p>
+    <form class="guess-row" id="guessForm" autocomplete="off">
+      <button type="button" class="secondary hidden" id="signBtn" aria-label="Toggle negative">&plusmn;</button>
+      <div class="input-wrap">
+        <input id="guessInput" inputmode="decimal" placeholder="Your guess" aria-label="Your guess">
+        <span class="unit" id="unitLabel">m</span>
+      </div>
+      <button class="primary" type="submit" id="guessBtn">Guess</button>
+    </form>
+    <div id="result" class="result hidden"></div>
+  </section>
+
+  <!-- END SCREEN -->
+  <section id="endScreen" class="card hidden">
+    <h2 id="endTitle">Game over</h2>
+    <p id="endSummary"></p>
+    <table>
+      <thead><tr><th>Item</th><th class="num">You</th><th class="num">Actual</th><th class="num">Pts</th></tr></thead>
+      <tbody id="endTable"></tbody>
+    </table>
+    <div class="actions">
+      <button class="primary" id="againBtn">Play again</button>
+      <button class="secondary" id="menuBtn">Change categories</button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ---------- Categories ---------- */
+const CATS = {
+  length:   { label: "Length",      unit: "m",    imp: v => fmt(v * 3.28084) + " ft",
+              tip: "1 m is about 3.3 ft, so multiply meters by 3 and add 10%. A door is about 2 m, a story of a building about 3 m.",
+              colors: ["#8ec5fc", "#e0c3fc"], ground: "#7bb661", decos: ["🌳","☁️","🏠"] },
+  temp:     { label: "Temperature", unit: "°C",   imp: v => fmt(v * 9 / 5 + 32) + " °F", linear: true,
+              tip: "Quick estimate: °F ≈ °C × 2 + 30. Landmarks: 0 freezing, 10 jacket, 20 room, 30 hot, 37 body, 100 boiling.",
+              colors: ["#ffb199", "#ff0844"], ground: "#c97b4a", decos: ["☀️","🔥","❄️"] },
+  speed:    { label: "Speed",       unit: "km/h", imp: v => fmt(v * 0.621371) + " mph",
+              tip: "km/h ≈ mph × 1.6. 50 km/h is a city street, 100 km/h is a highway, 130 km/h is a fast European motorway.",
+              colors: ["#43e97b", "#38f9d7"], ground: "#555b66", decos: ["💨","🏁","🛣️"] },
+  mass:     { label: "Mass",        unit: "kg",   imp: v => fmt(v * 2.20462) + " lb",
+              tip: "1 kg ≈ 2.2 lb, so halve the pounds and take off 10%. One liter of water weighs exactly 1 kg.",
+              colors: ["#fddb92", "#d1fdff"], ground: "#a3866a", decos: ["⚖️","🏋️","📦"] },
+  volume:   { label: "Volume",      unit: "L",    imp: v => v < 3.785 ? fmt(v * 33.814) + " fl oz" : fmt(v * 0.264172) + " gal",
+              tip: "1 L is about 1 quart (a little more). A US gallon is 3.8 L. A 12 oz can is 355 mL, which is 0.355 L.",
+              colors: ["#a1c4fd", "#c2e9fb"], ground: "#5b8fb9", decos: ["💧","🫧","🌊"] },
+  distance: { label: "Distance",    unit: "km",   imp: v => fmt(v * 0.621371) + " mi",
+              tip: "1 km ≈ 0.6 mi, and 1 mi ≈ 1.6 km. A 5K is 3.1 mi. Walking 1 km takes about 12 minutes.",
+              colors: ["#f6d365", "#fda085"], ground: "#9c7a54", decos: ["🗺️","📍","🧭"] }
+};
+
+/* ---------- Items: answer is in the category's metric unit ---------- */
+const ITEMS = [
+  // Length (m)
+  { c: "length", e: "🚌", q: "A yellow school bus", s: "Front bumper to back bumper", a: 12 },
+  { c: "length", e: "🏀", q: "A basketball hoop", s: "Floor to the rim", a: 3.05, n: "Regulation rim height is exactly 10 ft." },
+  { c: "length", e: "🚪", q: "A standard interior door", s: "Height", a: 2.03 },
+  { c: "length", e: "🦒", q: "An adult male giraffe", s: "Height to the top of the head", a: 5.5 },
+  { c: "length", e: "🐋", q: "An adult blue whale", s: "Length", a: 25, n: "The largest ever recorded was close to 30 m." },
+  { c: "length", e: "🗽", q: "The Statue of Liberty", s: "Heel to the top of the torch (no pedestal)", a: 46 },
+  { c: "length", e: "🗼", q: "The Eiffel Tower", s: "Height including antennas", a: 330 },
+  { c: "length", e: "🏈", q: "An American football field", s: "Length including both end zones", a: 109.7 },
+  { c: "length", e: "🎾", q: "A tennis court", s: "Baseline to baseline", a: 23.77 },
+  { c: "length", e: "✈️", q: "A Boeing 747-400", s: "Nose to tail", a: 70.7 },
+  { c: "length", e: "🧍", q: "The average American man", s: "Height", a: 1.75 },
+  { c: "length", e: "🦖", q: "A Tyrannosaurus rex", s: "Snout to tail tip", a: 12 },
+  { c: "length", e: "🏙️", q: "The Burj Khalifa", s: "Height", a: 828 },
+  { c: "length", e: "🏊", q: "An Olympic swimming pool", s: "Length", a: 50 },
+  { c: "length", e: "🐘", q: "An adult male African elephant", s: "Height at the shoulder", a: 3.2 },
+  { c: "length", e: "🚗", q: "A midsize sedan", s: "Bumper to bumper", a: 4.9 },
+  { c: "length", e: "🍌", q: "A banana", s: "Tip to tip (answer in meters, decimals allowed)", a: 0.18 },
+  { c: "length", e: "📱", q: "A smartphone", s: "Height (answer in meters, decimals allowed)", a: 0.15 },
+
+  // Temperature (°C)
+  { c: "temp", e: "🧊", q: "Water freezes", s: "At sea level", a: 0 },
+  { c: "temp", e: "🫖", q: "Water boils", s: "At sea level", a: 100 },
+  { c: "temp", e: "🤒", q: "Normal human body temperature", s: "Oral thermometer", a: 37 },
+  { c: "temp", e: "🌡️", q: "Where a fever officially starts", s: "Medical threshold", a: 38, n: "That is the 100.4 °F number your doctor uses." },
+  { c: "temp", e: "🛋️", q: "A comfortable living room", s: "Thermostat setting", a: 21 },
+  { c: "temp", e: "🌵", q: "A brutal summer afternoon in Phoenix", s: "Air temperature", a: 43 },
+  { c: "temp", e: "🛁", q: "A hot tub", s: "Maximum recommended setting", a: 40 },
+  { c: "temp", e: "🍪", q: "An oven baking chocolate chip cookies", s: "Oven setting", a: 177 },
+  { c: "temp", e: "🧊", q: "A home freezer", s: "Recommended setting", a: -18 },
+  { c: "temp", e: "🥛", q: "A refrigerator", s: "Recommended maximum", a: 4 },
+  { c: "temp", e: "☕", q: "Water for brewing coffee", s: "Ideal brewing temperature", a: 93 },
+  { c: "temp", e: "🍕", q: "A wood-fired Neapolitan pizza oven", s: "Oven floor", a: 450 },
+  { c: "temp", e: "🏜️", q: "The hottest air temperature ever recorded", s: "Death Valley, 1913", a: 56.7 },
+  { c: "temp", e: "🥶", q: "An average January night in Minneapolis", s: "Average low", a: -13 },
+  { c: "temp", e: "🧥", q: "A crisp fall morning where you want a light jacket", s: "Air temperature", a: 10 },
+  { c: "temp", e: "🏖️", q: "A perfect beach day", s: "Air temperature", a: 30 },
+  { c: "temp", e: "🧖", q: "A Finnish sauna", s: "Air temperature", a: 85 },
+  { c: "temp", e: "🥩", q: "A medium-rare steak", s: "Internal temperature", a: 57 },
+  { c: "temp", e: "🍗", q: "Safely cooked chicken", s: "Internal temperature", a: 74 },
+  { c: "temp", e: "🤯", q: "The one temperature where °C and °F read the same", s: "Trivia", a: -40 },
+  { c: "temp", e: "🏊", q: "A heated community swimming pool", s: "Water temperature", a: 27 },
+
+  // Speed (km/h)
+  { c: "speed", e: "🚶", q: "A normal walking pace", s: "Adult on a sidewalk", a: 5 },
+  { c: "speed", e: "🏃", q: "Usain Bolt at top speed", s: "During his 100 m world record", a: 44.7 },
+  { c: "speed", e: "🐆", q: "A cheetah sprinting", s: "Top speed", a: 110 },
+  { c: "speed", e: "✈️", q: "A jet airliner at cruise", s: "Ground speed in calm air", a: 900 },
+  { c: "speed", e: "🚴", q: "The Tour de France peloton", s: "Average speed over the whole race", a: 41 },
+  { c: "speed", e: "⚾", q: "The fastest pitch ever recorded", s: "Aroldis Chapman, 2010", a: 170 },
+  { c: "speed", e: "🚄", q: "A Japanese bullet train", s: "Top operating speed", a: 320 },
+  { c: "speed", e: "🌀", q: "The wind speed that makes a storm a hurricane", s: "Category 1 threshold", a: 119 },
+  { c: "speed", e: "🏎️", q: "A Formula 1 car on a long straight", s: "Top speed", a: 350 },
+  { c: "speed", e: "🔊", q: "The speed of sound", s: "At sea level, 20 °C", a: 1235 },
+  { c: "speed", e: "🏅", q: "The marathon world record pace", s: "Average speed for 42.2 km", a: 21 },
+  { c: "speed", e: "🦅", q: "A peregrine falcon diving", s: "Top recorded dive", a: 390 },
+  { c: "speed", e: "🏘️", q: "A typical US neighborhood speed limit", s: "Posted limit", a: 40 },
+  { c: "speed", e: "🛣️", q: "A typical rural US interstate speed limit", s: "Posted limit", a: 113 },
+  { c: "speed", e: "🎾", q: "A pro tennis first serve", s: "Typical men's tour serve", a: 200 },
+  { c: "speed", e: "🏃‍♀️", q: "A casual jogger", s: "Easy running pace", a: 10 },
+
+  // Mass (kg)
+  { c: "mass", e: "👨", q: "The average American man", s: "Body weight", a: 90 },
+  { c: "mass", e: "🎳", q: "The heaviest legal bowling ball", s: "Regulation maximum", a: 7.26 },
+  { c: "mass", e: "🚗", q: "A midsize sedan", s: "Curb weight", a: 1500 },
+  { c: "mass", e: "🛻", q: "A full-size pickup truck", s: "Curb weight", a: 2100 },
+  { c: "mass", e: "🐘", q: "An adult male African elephant", s: "Body weight", a: 6000 },
+  { c: "mass", e: "👶", q: "A newborn baby", s: "Average birth weight", a: 3.4 },
+  { c: "mass", e: "🐕", q: "An adult golden retriever", s: "Body weight", a: 30 },
+  { c: "mass", e: "🏈", q: "An NFL football", s: "Regulation weight (decimals allowed)", a: 0.41 },
+  { c: "mass", e: "🏋️", q: "An Olympic men's barbell", s: "Empty bar, no plates", a: 20 },
+  { c: "mass", e: "📱", q: "A smartphone", s: "Weight (decimals allowed)", a: 0.2 },
+  { c: "mass", e: "🐻", q: "An adult male grizzly bear", s: "Body weight", a: 270 },
+  { c: "mass", e: "🦃", q: "A Thanksgiving turkey", s: "Typical store-bought bird", a: 7 },
+  { c: "mass", e: "🥛", q: "A full gallon of milk", s: "Including the milk", a: 3.9 },
+  { c: "mass", e: "🎹", q: "A concert grand piano", s: "Weight", a: 480 },
+  { c: "mass", e: "🐋", q: "An adult blue whale", s: "Body weight", a: 150000 },
+
+  // Volume (L)
+  { c: "volume", e: "🥤", q: "A can of soda", s: "Standard US can (decimals allowed)", a: 0.355 },
+  { c: "volume", e: "🥛", q: "A gallon jug of milk", s: "Capacity", a: 3.785 },
+  { c: "volume", e: "⛽", q: "A midsize car's gas tank", s: "Capacity", a: 55 },
+  { c: "volume", e: "🛁", q: "A filled bathtub", s: "Typical fill", a: 150 },
+  { c: "volume", e: "🍷", q: "A standard bottle of wine", s: "Capacity (decimals allowed)", a: 0.75 },
+  { c: "volume", e: "🩸", q: "The blood in an adult's body", s: "Total volume", a: 5 },
+  { c: "volume", e: "🚿", q: "An 8-minute shower", s: "Water used", a: 65 },
+  { c: "volume", e: "🛢️", q: "One barrel of oil", s: "The unit oil prices are quoted in", a: 159 },
+  { c: "volume", e: "☕", q: "A typical coffee mug", s: "Capacity (decimals allowed)", a: 0.35 },
+  { c: "volume", e: "🫁", q: "Adult human lungs", s: "Total capacity", a: 6 },
+  { c: "volume", e: "🪣", q: "A big orange hardware-store bucket", s: "The 5-gallon one", a: 18.9 },
+  { c: "volume", e: "🔥", q: "A home water heater tank", s: "Common size", a: 190 },
+  { c: "volume", e: "🏊", q: "An Olympic swimming pool", s: "Water volume", a: 2500000 },
+
+  // Distance (km)
+  { c: "distance", e: "🏃", q: "A marathon", s: "Race distance", a: 42.195 },
+  { c: "distance", e: "🏅", q: "A half marathon", s: "Race distance", a: 21.1 },
+  { c: "distance", e: "🛤️", q: "One mile", s: "Converted to km (decimals allowed)", a: 1.609 },
+  { c: "distance", e: "🛫", q: "New York to Los Angeles", s: "Straight-line flight distance", a: 3940 },
+  { c: "distance", e: "🌍", q: "Around the Earth at the equator", s: "Circumference", a: 40075 },
+  { c: "distance", e: "🌕", q: "Earth to the Moon", s: "Average distance", a: 384400 },
+  { c: "distance", e: "☁️", q: "A jet's cruising altitude", s: "Height above sea level", a: 11 },
+  { c: "distance", e: "🏔️", q: "Mount Everest", s: "Summit above sea level", a: 8.849 },
+  { c: "distance", e: "🗽", q: "Manhattan Island", s: "Length, north to south", a: 21.6 },
+  { c: "distance", e: "🏞️", q: "The Grand Canyon", s: "Length of the canyon", a: 446 },
+  { c: "distance", e: "🇺🇸", q: "The width of the contiguous US", s: "Coast to coast, roughly", a: 4500 },
+  { c: "distance", e: "🛰️", q: "The International Space Station", s: "Altitude above Earth", a: 410 },
+  { c: "distance", e: "⛴️", q: "The English Channel", s: "Narrowest crossing, Dover to Calais", a: 33 },
+  { c: "distance", e: "🏞️", q: "The Mississippi River", s: "Total length", a: 3730 }
+];
+
+const ROUNDS = 10;
+const STORE_KEY = "thinkMetricBest";
+
+/* ---------- Helpers ---------- */
+function fmt(v) {
+  const a = Math.abs(v);
+  let d = a >= 100 ? 0 : a >= 10 ? 1 : a >= 1 ? 2 : 3;
+  return Number(v.toFixed(d)).toLocaleString("en-US", { maximumFractionDigits: d });
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function readBest() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+}
+function writeBest(obj) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(obj)); } catch (e) { /* storage blocked */ }
+}
+
+/*
+  Scoring.
+  Temperature is on an interval scale, so we score absolute error in degrees.
+  Everything else is a ratio scale, so being 2x off is equally wrong for a banana or a blue whale.
+  We score the log of the ratio guess/actual.
+*/
+function scoreGuess(item, guess) {
+  const actual = item.a;
+  if (CATS[item.c].linear) {
+    const tol = Math.max(3, Math.abs(actual) * 0.08);  // 3 degrees, or 8% for big oven numbers
+    const err = Math.abs(guess - actual);
+    if (err <= tol * 0.5) return 100;
+    return Math.round(100 * Math.max(0, 1 - (err - tol * 0.5) / (tol * 4)));
+  }
+  if (guess <= 0) return 0;
+  const r = Math.abs(Math.log(guess / actual));
+  const perfect = 0.05;          // within about 5%
+  const zero = Math.log(3);      // 3x off or worse scores nothing
+  if (r <= perfect) return 100;
+  return Math.round(100 * Math.max(0, 1 - (r - perfect) / (zero - perfect)));
+}
+function verdict(pts) {
+  if (pts >= 90) return { t: "Nailed it", cls: "good", color: "var(--good)" };
+  if (pts >= 60) return { t: "Close", cls: "good", color: "var(--good)" };
+  if (pts >= 30) return { t: "In the ballpark", cls: "ok", color: "var(--ok)" };
+  return { t: "Way off", cls: "bad", color: "var(--bad)" };
+}
+
+/* ---------- State ---------- */
+let selected = new Set(Object.keys(CATS));
+let deck = [], round = 0, score = 0, history = [], answered = false;
+
+const $ = id => document.getElementById(id);
+
+/* ---------- Start screen ---------- */
+function renderChips() {
+  const box = $("catChips");
+  box.innerHTML = "";
+  const all = document.createElement("button");
+  all.className = "chip";
+  all.textContent = "All";
+  all.setAttribute("aria-pressed", selected.size === Object.keys(CATS).length);
+  all.onclick = () => { selected = new Set(Object.keys(CATS)); renderChips(); };
+  box.appendChild(all);
+  for (const [key, cat] of Object.entries(CATS)) {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = cat.label + " (" + cat.unit + ")";
+    b.setAttribute("aria-pressed", selected.has(key));
+    b.onclick = () => {
+      if (selected.size === Object.keys(CATS).length) selected = new Set([key]);
+      else if (selected.has(key)) selected.delete(key);
+      else selected.add(key);
+      renderChips();
+    };
+    box.appendChild(b);
+  }
+  $("startBtn").disabled = selected.size === 0;
+  const best = readBest()[bestKey()];
+  $("bestLine").textContent = best != null ? "Your best for this mix: " + best + " / " + ROUNDS * 100 : "";
+}
+function bestKey() { return [...selected].sort().join(","); }
+
+function startGame() {
+  // Spread rounds evenly across the chosen categories, then shuffle.
+  const cats = shuffle([...selected]);
+  const pools = Object.fromEntries(cats.map(c => [c, shuffle(ITEMS.filter(i => i.c === c))]));
+  deck = [];
+  let k = 0;
+  while (deck.length < ROUNDS) {
+    const c = cats[k % cats.length];
+    if (pools[c].length) deck.push(pools[c].pop());
+    else if (cats.every(x => !pools[x].length)) break;
+    k++;
+  }
+  deck = shuffle(deck);
+  round = 0; score = 0; history = [];
+  $("roundTotal").textContent = deck.length;
+  show("gameScreen");
+  nextRound();
+}
+
+/* ---------- Game screen ---------- */
+function drawScene(item) {
+  const cat = CATS[item.c];
+  const scene = $("scene");
+  const angle = Math.floor(Math.random() * 360);
+  scene.style.background = "linear-gradient(" + angle + "deg, " + cat.colors[0] + ", " + cat.colors[1] + ")";
+  scene.innerHTML = "";
+  const ground = document.createElement("div");
+  ground.className = "ground";
+  ground.style.background = cat.ground;
+  ground.style.opacity = "0.35";
+  scene.appendChild(ground);
+  for (let i = 0; i < 4; i++) {
+    const d = document.createElement("span");
+    d.className = "deco";
+    d.textContent = cat.decos[Math.floor(Math.random() * cat.decos.length)];
+    d.style.left = (5 + Math.random() * 85) + "%";
+    d.style.top = (8 + Math.random() * 55) + "%";
+    d.style.transform = "rotate(" + (Math.random() * 40 - 20) + "deg)";
+    scene.appendChild(d);
+  }
+  const badge = document.createElement("span");
+  badge.className = "badge";
+  badge.textContent = cat.label;
+  scene.appendChild(badge);
+  const em = document.createElement("span");
+  em.className = "emoji";
+  em.textContent = item.e;
+  em.style.transform = "scale(" + (0.9 + Math.random() * 0.25) + ") rotate(" + (Math.random() * 10 - 5) + "deg)";
+  scene.appendChild(em);
+}
+
+function nextRound() {
+  if (round >= deck.length) return endGame();
+  const item = deck[round];
+  const cat = CATS[item.c];
+  answered = false;
+  $("roundNum").textContent = round + 1;
+  $("scoreNum").textContent = score;
+  drawScene(item);
+  $("prompt").textContent = item.q;
+  $("subPrompt").textContent = item.s + ". Guess in " + cat.unit + ".";
+  $("unitLabel").textContent = cat.unit;
+  $("signBtn").classList.toggle("hidden", !cat.linear);
+  const input = $("guessInput");
+  input.value = "";
+  input.disabled = false;
+  $("guessBtn").textContent = "Guess";
+  $("result").classList.add("hidden");
+  input.focus();
+}
+
+function submitGuess(ev) {
+  ev.preventDefault();
+  if (answered) { round++; nextRound(); return; }
+  const raw = $("guessInput").value.replace(/,/g, "").replace(/[−–]/g, "-").trim();
+  const guess = parseFloat(raw);
+  if (raw === "" || isNaN(guess)) { $("guessInput").focus(); return; }
+  const item = deck[round];
+  const cat = CATS[item.c];
+  const pts = scoreGuess(item, guess);
+  score += pts;
+  history.push({ item, guess, pts });
+  answered = true;
+  $("guessInput").disabled = true;
+  $("scoreNum").textContent = score;
+  $("guessBtn").textContent = round + 1 >= deck.length ? "See results" : "Next";
+  $("guessBtn").focus();
+
+  const v = verdict(pts);
+  let direction = "";
+  if (pts < 100) {
+    if (cat.linear) direction = guess > item.a ? "You guessed too warm." : "You guessed too cold.";
+    else if (guess > 0) {
+      const ratio = guess / item.a;
+      direction = ratio > 1 ? "You were " + fmt(ratio) + "x too high." : "You were " + fmt(1 / ratio) + "x too low.";
+    }
+  }
+  const res = $("result");
+  res.innerHTML =
+    '<p class="big ' + v.cls + '">' + v.t + ': +' + pts + ' pts</p>' +
+    '<div class="meter"><div id="meterFill" style="background:' + v.color + '"></div></div>' +
+    '<p>Actual: <b>' + fmt(item.a) + ' ' + cat.unit + '</b> (about ' + cat.imp(item.a) + ')</p>' +
+    '<p>Your guess: ' + fmt(guess) + ' ' + cat.unit + ' (about ' + cat.imp(guess) + '). ' + direction + '</p>' +
+    (item.n ? '<p>' + item.n + '</p>' : '') +
+    '<div class="tip">' + cat.tip + '</div>';
+  res.classList.remove("hidden");
+  requestAnimationFrame(() => { $("meterFill").style.width = pts + "%"; });
+}
+
+function toggleSign() {
+  if (answered) return;
+  const input = $("guessInput");
+  const v = input.value.trim();
+  input.value = v.startsWith("-") ? v.slice(1) : "-" + v;
+  input.focus();
+}
+
+/* ---------- End screen ---------- */
+function endGame() {
+  const max = deck.length * 100;
+  const pct = Math.round(score / max * 100);
+  const bests = readBest();
+  const key = bestKey();
+  const isBest = bests[key] == null || score > bests[key];
+  if (isBest) { bests[key] = score; writeBest(bests); }
+  $("endTitle").textContent = pct >= 80 ? "You think in metric now" : pct >= 50 ? "Getting there" : "Still thinking in feet";
+  $("endSummary").textContent = "Final score: " + score + " / " + max + " (" + pct + "%)." + (isBest ? " New personal best for this mix." : " Best for this mix: " + bests[key] + ".");
+  const tbody = $("endTable");
+  tbody.innerHTML = "";
+  for (const h of history) {
+    const unit = CATS[h.item.c].unit;
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + h.item.e + " " + h.item.q + "</td>" +
+      '<td class="num">' + fmt(h.guess) + " " + unit + "</td>" +
+      '<td class="num">' + fmt(h.item.a) + " " + unit + "</td>" +
+      '<td class="num ' + verdict(h.pts).cls + '">' + h.pts + "</td>";
+    tbody.appendChild(tr);
+  }
+  show("endScreen");
+}
+
+function show(id) {
+  for (const s of ["startScreen", "cheatCard", "gameScreen", "endScreen"]) $(s).classList.add("hidden");
+  $(id).classList.remove("hidden");
+  if (id === "startScreen") { $("cheatCard").classList.remove("hidden"); renderChips(); }
+}
+
+$("startBtn").onclick = startGame;
+$("againBtn").onclick = startGame;
+$("menuBtn").onclick = () => show("startScreen");
+$("guessForm").addEventListener("submit", submitGuess);
+$("signBtn").onclick = toggleSign;
+renderChips();
+</script>
+</body>
+</html>
